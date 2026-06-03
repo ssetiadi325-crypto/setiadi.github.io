@@ -51,6 +51,66 @@ st.markdown("""
         border-color: #06b6d4;
         box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
     }
+
+    /* =========================================================================
+       ⚡ MODIFIKASI RESPONSIVITAS OTOMATIS (KHUSUS LAYAR HP SEPERTI SMARTPHONE)
+       ========================================================================= */
+    @media (max-width: 768px) {
+        /* Mengurangi padding samping aplikasi agar teks tidak tertekan ke dalam */
+        .block-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            padding-top: 1rem !important;
+        }
+
+        /* Menjinakkan font judul utama dan sub-judul di Hero Header agar tidak hilang/terpotong */
+        .hero-header {
+            min-height: 140px !important;
+            padding: 20px 15px !important;
+            margin-bottom: 15px !important;
+        }
+        .hero-header h1 {
+            font-size: 1.4rem !important;
+            line-height: 1.2 !important;
+        }
+        .hero-header p {
+            font-size: 0.85rem !important;
+        }
+
+        /* Penyesuaian teks tab judul agar muat sebaris di HP */
+        button[data-baseweb="tab"] {
+            font-size: 0.85rem !important;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+
+        /* Menyesuaikan ukuran teks kartu metrik "Cakupan Model Sewa" */
+        [data-testid="stMetricValue"] {
+            font-size: 1.15rem !important;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.8rem !important;
+        }
+
+        /* Memaksa box Plotly Chart & DataFrame agar memiliki scroll horizontal mandiri yang mulus */
+        div[data-testid="stDataFrame"], .js-plotly-plot {
+            overflow-x: auto !important;
+            width: 100% !important;
+        }
+        
+        /* Mengurangi padding kartu ROI di HP */
+        .premium-card {
+            padding: 12px !important;
+        }
+        
+        /* Menyesuaikan ukuran gambar/teks footer di HP */
+        .footer-background-container h2 {
+            font-size: 1.3rem !important;
+        }
+        .footer-background-container p {
+            font-size: 0.85rem !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -162,7 +222,6 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# --- BAGIAN UTAMA YANG DIUBAH (MENGGUNAKAN PYTHON DATETIME LOKAL) ---
 # Membuat daftar nama hari lokal Indonesia
 hari_id = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 bulan_id = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
@@ -174,7 +233,7 @@ nama_bulan = bulan_id[tgl_sekarang.month - 1]
 # Format teks akhir: "Rabu, 3 Juni 2026"
 teks_tanggal = f"{nama_hari}, {tgl_sekarang.day} {nama_bulan} {tgl_sekarang.year}"
 
-# Tampilkan langsung ke layar tanpa script HTML/JS yang bikin loading terus
+# Tampilkan tanggal
 st.markdown(f"""
 <div class="realtime-clock-container">
     <span style="margin-right: 8px;">📅</span>
@@ -247,7 +306,7 @@ if 'data_master' in st.session_state:
     ])
     
     # ------------------------------------------
-    # TAB 1: TABEL RINGKASAN HARGA
+    # TAB 1: TABEL RINGKASAN HARGA (SUSUNAN ASLI UTUH)
     # ------------------------------------------
     with tab_summary:
         st.markdown(f"### 📊 Resume Ringkasan Data Pasar Wilayah: **{wilayah_aktif}**")
@@ -320,7 +379,7 @@ if 'data_master' in st.session_state:
             )
 
     # ------------------------------------------
-    # TAB 2: TABEL DAFTAR UNIT
+    # TAB 2: TABEL DAFTAR UNIT (SUSUNAN ASLI UTUH)
     # ------------------------------------------
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -367,11 +426,11 @@ if 'data_master' in st.session_state:
             "ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** pada kolom Harga Harian "
             "bukan merupakan tarif sewa harian murni dari pemilik properti. Platform SPEEDHOME pada dasarnya merupakan "
             "platform *managed-rental* yang **berfokus mendominasi pasar sewa bulanan dan tahunan**. Angka harian tersebut "
-            "dihasilkan melalui kalkulator konversi internal berbasis algoritma komposit untuk keperluan analisis komparatif makro."
+            "dihasiilkan melalui kalkulator konversi internal berbasis algoritma komposit untuk keperluan analisis komparatif makro."
         )
 
     # ------------------------------------------
-    # TAB 3: INOVASI & VISUALISASI DATA
+    # TAB 3: INOVASI & VISUALISASI DATA (SUSUNAN ASLI UTUH)
     # ------------------------------------------
     with tab_innovation:
         st.markdown("### 💡 CEO Data-Driven Strategic Insights")
@@ -434,7 +493,6 @@ def get_footer_base64(image_path):
             return ""
     return ""
 
-# Referensi gambar_f68560.png dipetakan sebagai image_024abcd.jpg sesuai tata letak skrip asli Anda
 nama_file_footer = "image_024abcd.jpg"
 footer_base64 = get_footer_base64(nama_file_footer)
 
