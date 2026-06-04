@@ -424,10 +424,10 @@ if 'data_master' in st.session_state:
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
-                # Menggunakan LinkColumn dan mencocokkan nama kolom agar bisa diklik langsung
+                # Menggunakan LinkColumn yang aman tanpa merusak URL asli
                 "Tautan Verifikasi SPEEDHOME": st.column_config.LinkColumn(
                     "Tautan Verifikasi SPEEDHOME",
-                    display_text=r"https://speedhome\.com/ads/(\d+)" # Menampilkan pola teks ringkas yang rapi
+                    display_text="Buka Link 🌐" # Teks statis yang aman dan bisa diklik
                 ),
                 "Harga Harian Tampilan": st.column_config.TextColumn(
                     "Harga Harian (RM)", 
@@ -435,6 +435,7 @@ if 'data_master' in st.session_state:
                 ),
                 "Harga Bulanan (RM)": st.column_config.NumberColumn("Harga Bulanan (RM)", format="RM %d"),
                 "Harga Tahunan (RM)": st.column_config.NumberColumn("Harga Tahunan (RM)", format="RM %d")
+            },
             },
             use_container_width=True,
             hide_index=True
