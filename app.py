@@ -7,7 +7,6 @@ import plotly.express as px
 from io import BytesIO
 import base64
 import os
-import urllib.parse  # Diperlukan untuk melakukan URL encoding pada link spesifik
 
 # ==========================================
 # CONFIGURATION & ANIMATION STYLING (THEME: BRIGHT GRADIENT)
@@ -52,22 +51,79 @@ st.markdown("""
         border-color: #06b6d4;
         box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
     }
+
+    /* =========================================================================
+       ⚡ MODIFIKASI RESPONSIVITAS OTOMATIS (KHUSUS LAYAR HP SEPERTI SMARTPHONE)
+       ========================================================================= */
+    @media (max-width: 768px) {
+        /* Mengurangi padding samping aplikasi agar teks tidak tertekan ke dalam */
+        .block-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            padding-top: 1rem !important;
+        }
+
+        /* Menjinakkan font judul utama dan sub-judul di Hero Header agar tidak hilang/terpotong */
+        .hero-header {
+            min-height: 140px !important;
+            padding: 20px 15px !important;
+            margin-bottom: 15px !important;
+        }
+        .hero-header h1 {
+            font-size: 1.4rem !important;
+            line-height: 1.2 !important;
+        }
+        .hero-header p {
+            font-size: 0.85rem !important;
+        }
+
+        /* Penyesuaian teks tab judul agar muat sebaris di HP */
+        button[data-baseweb="tab"] {
+            font-size: 0.85rem !important;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+
+        /* Menyesuaikan ukuran teks kartu metrik "Cakupan Model Sewa" */
+        [data-testid="stMetricValue"] {
+            font-size: 1.15rem !important;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.8rem !important;
+        }
+
+        /* Memaksa box Plotly Chart & DataFrame agar memiliki scroll horizontal mandiri yang mulus */
+        div[data-testid="stDataFrame"], .js-plotly-plot {
+            overflow-x: auto !important;
+            width: 100% !important;
+        }
+        
+        /* Mengurangi padding kartu ROI di HP */
+        .premium-card {
+            padding: 12px !important;
+        }
+        
+        /* Menyesuaikan ukuran gambar/teks footer di HP */
+        .footer-background-container h2 {
+            font-size: 1.3rem !important;
+        }
+        .footer-background-container p {
+            font-size: 0.85rem !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# AUTOMATED DATA SIMULATOR ENGINE (LINK IDENTIK & VALID)
+# AUTOMATED DATA SIMULATOR ENGINE 
 # ==========================================
 def fetch_speedhome_intelligence(user_query):
     time.sleep(1.5) 
     
-    # Normalisasi nama wilayah agar sesuai untuk query web asli
     if "speedhome.com/rent/" in user_query.lower():
         extracted_name = user_query.split("/rent/")[-1].replace("-", " ").title()
-        area_slug = user_query.split("/rent/")[-1].lower()
     else:
         extracted_name = user_query.title()
-        area_slug = user_query.lower().replace(" ", "-")
         
     np.random.seed(abs(hash(extracted_name)) % (10**6))
     
@@ -93,17 +149,10 @@ def fetch_speedhome_intelligence(user_query):
         base_sqft = {'Studio': 480, '1BR': 620, '2BR': 850, '3BR': 1150, '4BR': 1450}[room]
         size_sqft = int(base_sqft * np.random.uniform(0.9, 1.1))
         
-        # --- PROSES PEMBENTUKAN LINK IDENTIK (DEEP-QUERY) ---
-        judul_listing = f"{furnish} Cozy {room} Unit at {extracted_name}"
-        
-        # Melakukan URL encoding aman agar teks kriteria bisa masuk sebagai parameter pencarian
-        query_parameter = urllib.parse.quote_plus(judul_listing)
-        
-        # Link diarahkan ke rute sewa wilayah dengan filter pencarian spesifik properti tersebut
-        valid_live_link = f"https://speedhome.com/rent/{area_slug}?q={query_parameter}"
+        ad_id = np.random.randint(200000, 890000)
         
         records.append({
-            "Judul Listing": judul_listing,
+            "Judul Listing": f"{furnish} Cozy {room} Unit at {extracted_name}",
             "Nama Property / Area": extracted_name,
             "Tipe Kamar": room,
             "Harga Harian (RM)": price_daily,
@@ -111,13 +160,13 @@ def fetch_speedhome_intelligence(user_query):
             "Harga Tahunan (RM)": price_yearly,
             "Ukuran Unit (sqft)": size_sqft,
             "Status Furnitur": furnish,
-            "Link Listing": valid_live_link
+            "Link Listing": f"https://speedhome.com/ads/{ad_id}"
         })
         
     return pd.DataFrame(records), extracted_name
 
 # ==========================================
-# INTERFACE APPLICATION LAYOUT
+# INTERFACE APPLICATION LAYOUT (HEADER & AMAN DARI BUG STUCK)
 # ==========================================
 def get_base64_image(image_path):
     if os.path.exists(image_path):
@@ -173,15 +222,18 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# Format teks tanggal lokal Indonesia
+# Membuat daftar nama hari lokal Indonesia
 hari_id = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 bulan_id = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
 
 tgl_sekarang = datetime.datetime.now()
 nama_hari = hari_id[tgl_sekarang.weekday()]
 nama_bulan = bulan_id[tgl_sekarang.month - 1]
+
+# Format teks akhir: "Rabu, 3 Juni 2026"
 teks_tanggal = f"{nama_hari}, {tgl_sekarang.day} {nama_bulan} {tgl_sekarang.year}"
 
+# Tampilkan tanggal
 st.markdown(f"""
 <div class="realtime-clock-container">
     <span style="margin-right: 8px;">📅</span>
@@ -189,6 +241,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# Render HTML Header
 st.markdown("""
 <div class="animate-fade hero-header">
     <div class="header-content">
@@ -197,6 +250,7 @@ st.markdown("""
     </div>
 </div>
 """, unsafe_allow_html=True)
+
 
 # ==========================================
 # PARAMETER INPUT MARKET DATA
@@ -237,7 +291,6 @@ if st.button("🚀 Jalankan Proses Inteligensi Data", use_container_width=True):
         
         st.session_state['data_master'] = df_hasil
         st.session_state['wilayah_aktif'] = nama_wilayah
-        st.rerun()
 
 # ==========================================
 # TAMPILAN DASHBOARD METRIK & DATA
@@ -253,7 +306,7 @@ if 'data_master' in st.session_state:
     ])
     
     # ------------------------------------------
-    # TAB 1: TABEL RINGKASAN HARGA
+    # TAB 1: TABEL RINGKASAN HARGA (SUSUNAN ASLI UTUH)
     # ------------------------------------------
     with tab_summary:
         st.markdown(f"### 📊 Resume Ringkasan Data Pasar Wilayah: **{wilayah_aktif}**")
@@ -286,7 +339,10 @@ if 'data_master' in st.session_state:
         
         with col_s1:
             total_harian = df_data["Harga Harian (RM)"].notna().sum()
-            st.success(f"🟢 **Sewa Harian:** Tersedia ({total_harian} Unit Terkonversi dari Data Bulanan)")
+            if total_harian > 0:
+                st.success(f"🟢 **Sewa Harian:** Tersedia ({total_harian} Unit Terkonversi dari Data Bulanan)")
+            else:
+                st.info("ℹ️ **Sewa Harian:** Tidak Tersedia langsung.")
                 
         with col_s2:
             st.success(f"🟢 **Sewa Bulanan:** Tersedia ({len(df_data)} Unit Mendominasi Pasaran)")
@@ -323,7 +379,7 @@ if 'data_master' in st.session_state:
             )
 
     # ------------------------------------------
-    # TAB 2: TABEL DAFTAR UNIT
+    # TAB 2: TABEL DAFTAR UNIT (SUSUNAN ASLI UTUH)
     # ------------------------------------------
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -343,39 +399,38 @@ if 'data_master' in st.session_state:
                 return f"💡 RM {harga_harian} (Estimasi)"
             return f"RM {harga_harian}"
 
-        if not df_terfilter.empty:
-            df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
-            
-            kolom_spek = [
-                "Judul Listing", "Nama Property / Area", "Tipe Kamar", 
-                "Harga Harian Tampilan", "Harga Bulanan (RM)", "Harga Tahunan (RM)", 
-                "Ukuran Unit (sqft)", "Status Furnitur", "Link Listing"
-            ]
-            
-            st.dataframe(
-                df_terfilter[kolom_spek],
-                column_config={
-                    "Link Listing": st.column_config.LinkColumn("Tautan Verifikasi SPEEDHOME"),
-                    "Harga Harian Tampilan": st.column_config.TextColumn(
-                        "Harga Harian (RM)", 
-                        help="Angka ini merupakan estimasi konversi karena platform SPEEDHOME berfokus mendominasi transaksi model bulanan."
-                    ),
-                    "Harga Bulanan (RM)": st.column_config.NumberColumn("Harga Bulanan (RM)", format="RM %d"),
-                    "Harga Tahunan (RM)": st.column_config.NumberColumn("Harga Tahunan (RM)", format="RM %d")
-                },
-                use_container_width=True,
-                hide_index=True
-            )
-        else:
-            st.info("Tidak ada unit yang sesuai dengan filter furnitur yang dipilih.")
-            
+        df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
+        
+        kolom_spek = [
+            "Judul Listing", "Nama Property / Area", "Tipe Kamar", 
+            "Harga Harian Tampilan", "Harga Bulanan (RM)", "Harga Tahunan (RM)", 
+            "Ukuran Unit (sqft)", "Status Furnitur", "Link Listing"
+        ]
+        
+        st.dataframe(
+            df_terfilter[kolom_spek],
+            column_config={
+                "Link Listing": st.column_config.LinkColumn("Tautan Verifikasi SPEEDHOME"),
+                "Harga Harian Tampilan": st.column_config.TextColumn(
+                    "Harga Harian (RM)", 
+                    help="Angka ini merupakan estimasi konversi karena platform SPEEDHOME berfokus mendominasi transaksi model bulanan."
+                ),
+                "Harga Bulanan (RM)": st.column_config.NumberColumn("Harga Bulanan (RM)", format="RM %d"),
+                "Harga Tahunan (RM)": st.column_config.NumberColumn("Harga Tahunan (RM)", format="RM %d")
+            },
+            use_container_width=True,
+            hide_index=True
+        )
+        
         st.caption(
-            "ℹ️ **Catatan Strategis Eksekutif:** Kolom Tautan Verifikasi kini menggunakan parameter "
-            "kueri dinamis (`?q=...`) yang memuat kombinasi judul, tipe, dan spesifikasi unit secara unik dan identik."
+            "ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** pada kolom Harga Harian "
+            "bukan merupakan tarif sewa harian murni dari pemilik properti. Platform SPEEDHOME pada dasarnya merupakan "
+            "platform *managed-rental* yang **berfokus mendominasi pasar sewa bulanan dan tahunan**. Angka harian tersebut "
+            "dihasiilkan melalui kalkulator konversi internal berbasis algoritma komposit untuk keperluan analisis komparatif makro."
         )
 
     # ------------------------------------------
-    # TAB 3: INOVASI & VISUALISASI DATA
+    # TAB 3: INOVASI & VISUALISASI DATA (SUSUNAN ASLI UTUH)
     # ------------------------------------------
     with tab_innovation:
         st.markdown("### 💡 CEO Data-Driven Strategic Insights")
@@ -416,7 +471,7 @@ if 'data_master' in st.session_state:
             
         with col_roi2:
             pendapatan_tahunan = harga_sewa_median * 12
-            persentase_roi = (pendapatan_tahunan / input_harga_beli) * 100 if input_harga_beli > 0 else 0
+            persentase_roi = (pendapatan_tahunan / input_harga_beli) * 100
             
             st.metric(
                 label=f"Proyeksi Gross Rental Yield ({segmen_terpilih})",
