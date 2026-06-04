@@ -102,18 +102,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 🌟 FITUR PROFESIONAL: SIDEBAR METADATA & CONTROL PANEL
-# ==========================================
-with st.sidebar:
-    st.markdown("## 🏢 SPEEDHOME Intelligence")
-    st.markdown("---")
-    st.markdown("**Version:** `v2.5.0-Enterprise` ")
-    st.markdown("**Environment:** `Production` ")
-    st.markdown("**Target Platform:** SPEEDHOME Malaysia")
-    st.markdown("---")
-    st.info("💡 **Tips Penggunaan:** Jika visualisasi tidak muncul, pastikan Anda menekan tombol **'Jalankan Proses Inteligensi Data'** terlebih dahulu di halaman utama.")
-
-# ==========================================
 # AUTOMATED DATA SIMULATOR ENGINE 
 # ==========================================
 def fetch_speedhome_intelligence(user_query):
@@ -180,7 +168,7 @@ nama_file_gambar = "image_023cbd.jpg"
 img_base64, error_message = get_base64_image(nama_file_gambar)
 
 if error_message:
-    st.sidebar.error(f"⚠️ **Sistem Deteksi Gambar Header:** {error_message}")
+    st.error(f"⚠️ **Sistem Deteksi Gambar Header:** {error_message}")
 
 if img_base64:
     background_style = f"""
@@ -383,17 +371,6 @@ if 'data_master' in st.session_state:
         st.markdown(f"### 📊 Resume Ringkasan Data Pasar Wilayah: **{wilayah_aktif}**")
         st.dataframe(df_summary_table, use_container_width=True)
         
-        # 🌟 FITUR PROFESIONAL: ANALISIS ANGGARAN STRATEGIS (BUSINESS ANALYTICS ASPECT)
-        st.write("---")
-        st.markdown("#### 🏢 Analisis Kelayakan Kelayakan Ekspansi Korporat")
-        budget_ceiling = 2500
-        rata_rata_wilayah = df_data["Harga Bulanan (RM)"].mean()
-        
-        if rata_rata_wilayah > budget_ceiling:
-            st.error(f"🚨 **Peringatan Strategis Korporat:** Rata-rata harga sewa pasar di wilayah {wilayah_aktif} (RM {rata_rata_wilayah:.0f}) saat ini **MELEBIHI** batas atas anggaran investasi strategis (RM {budget_ceiling}).")
-        else:
-            st.success(f"✅ **Analisis Kelayakan Finansial:** Rata-rata harga sewa pasar di wilayah {wilayah_aktif} (RM {rata_rata_wilayah:.0f}) berada dalam rentang **AMAN** di bawah pagu anggaran investasi korporat (RM {budget_ceiling}). Wilayah ini direkomendasikan untuk akuisisi unit baru.")
-        
         st.write("---")
         st.markdown("#### 🌐 Cakupan Ketersediaan Model Sewa")
         col_s1, col_s2, col_s3 = st.columns(3)
@@ -412,8 +389,8 @@ if 'data_master' in st.session_state:
             
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
-    # =========================================================================
-    # TAB 2: TABEL DAFTAR UNIT (PERBAIKAN RUNTIME ERROR & VERIFIKASI LINK JAMINAN LIVE)
+# =========================================================================
+    # TAB 2: TABEL DAFTAR UNIT (PERBAIKAN RUNTIME ERROR & VERIFIKASI LINK 404)
     # =========================================================================
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -438,11 +415,15 @@ if 'data_master' in st.session_state:
 
         df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
         
-        # 4. 🛠️ ALGORITMA PENYELAMAT: PAKSA RUTE KE HALAMAN AREA LIVE (Mencegah Link Rusak / Halaman 404)
+        # 4. 🛠️ ALGORITMA PENYELAMAT: PAKSA RUTE KE HALAMAN AREA LIVE (Mencegah Link Rusak / 404)
         def proteksi_dan_rute_url(row):
             area_str = str(row["Nama Property / Area"]).strip().lower().replace(" ", "-")
+            
+            # Jika area kosong atau bernilai nan, kembalikan ke homepage utama SPEEDHOME
             if not area_str or area_str == 'nan':
                 return "https://speedhome.com"
+            
+            # Alihkan ke halaman rent berdasarkan area yang aktif di SPEEDHOME agar selalu valid saat diklik
             return f"https://speedhome.com/rent/{area_str}"
 
         df_terfilter["Link Listing"] = df_terfilter.apply(proteksi_dan_rute_url, axis=1)
@@ -488,45 +469,21 @@ if 'data_master' in st.session_state:
         st.markdown("### 💡 CEO Data-Driven Strategic Insights")
         st.markdown("<p style='color: #06b6d4;'><b>Visualisasi Makro & Simulasi ROI Investasi Komersial</b></p>", unsafe_allow_html=True)
         
-        # 🌟 FITUR PROFESIONAL: QUALITY CONTROL & OUTLIER DETECTION (DATA SCIENCE ASPECT)
-        q1 = df_data["Harga Bulanan (RM)"].quantile(0.25)
-        q3 = df_data["Harga Bulanan (RM)"].quantile(0.75)
-        iqr = q3 - q1
-        batas_bawah = q1 - 1.5 * iqr
-        batas_atas = q3 + 1.5 * iqr
-        outliers = df_data[(df_data["Harga Bulanan (RM)"] < batas_bawah) | (df_data["Harga Bulanan (RM)"] > batas_atas)]
-        
-        st.markdown("#### 🛡️ Quality Control & Anomaly Detection (Statistical Baseline)")
-        col_qc1, col_qc2 = st.columns(2)
-        with col_qc1:
-            st.metric("Total Sampel Data Terkumpul", f"{len(df_data)} Unit Data")
-        with col_qc2:
-            st.metric("Anomali Rentang Harga (Outliers)", f"{len(outliers)} Unit", 
-                      delta="Stabilitas Pasar Aman" if len(outliers) == 0 else f"Terdeteksi Anomali Ekstrem ({len(outliers)})", 
-                      delta_color="inverse" if len(outliers) > 0 else "normal")
-        st.write("---")
-
         col_grafik1, col_grafik2 = st.columns(2)
         
         with col_grafik1:
-            # 🌟 FITUR PROFESIONAL: KUSTOMISASI WARNA GRAFIK AGAR SENADA DENGAN TEMA UI
             fig_box = px.box(
                 df_data, x="Tipe Kamar", y="Harga Bulanan (RM)",
-                color="Tipe Kamar", title="📦 Rentang Distribusi Harga Pasar Real-time",
-                template="plotly_white",
-                color_discrete_sequence=px.colors.sequential.Cyan_r
+                color="Tipe Kamar", title="Rentang Distribusi Harga Pasar Real-time",
+                template="plotly_white"
             )
-            fig_box.update_layout(showlegend=False)
             st.plotly_chart(fig_box, use_container_width=True)
             
         with col_grafik2:
-            # 🌟 FITUR PROFESIONAL: HOVER DATA YANG LEBIH INFORMATIF
             fig_scatter = px.scatter(
                 df_data, x="Ukuran Unit (sqft)", y="Harga Bulanan (RM)",
                 color="Status Furnitur", size="Harga Bulanan (RM)",
-                hover_name="Judul Listing",
-                hover_data=["Tipe Kamar", "Harga Tahunan (RM)"],
-                title="🎯 Korelasi Spasial Luas Bangunan vs Harga Sewa",
+                title="Korelasi Spasial Luas Bangunan vs Harga Sewa",
                 template="plotly_white"
             )
             st.plotly_chart(fig_scatter, use_container_width=True)
