@@ -390,7 +390,7 @@ if 'data_master' in st.session_state:
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
 # =========================================================================
-    # TAB 2: TABEL DAFTAR UNIT (PERBAIKAN TYPO NAMEERROR & SMART ROUTING)
+    # TAB 2: TABEL DAFTAR UNIT (PERBAIKAN RUNTIME ERROR & VERIFIKASI LINK 404)
     # =========================================================================
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -415,28 +415,17 @@ if 'data_master' in st.session_state:
 
         df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
         
-        # 4. 🛠️ ALGORITMA PENYELAMAT: JIKA ID EXPIRED, ALIHKAN KE PENCARIAN AREA
+        # 4. 🛠️ ALGORITMA PENYELAMAT: PAKSA RUTE KE HALAMAN AREA LIVE (Mencegah Link Rusak / 404)
         def proteksi_dan_rute_url(row):
-            url_str = str(row["Link Listing"]).strip()
             area_str = str(row["Nama Property / Area"]).strip().lower().replace(" ", "-")
             
-            if not url_str or url_str.lower() == 'nan':
+            # Jika area kosong atau bernilai nan, kembalikan ke homepage utama SPEEDHOME
+            if not area_str or area_str == 'nan':
                 return "https://speedhome.com"
             
-            # Jika terdeteksi format '/rent/details/' yang sudah kedaluwarsa di web SPEEDHOME
-            if "/rent/details/" in url_str:
-                # Alihkan secara halus ke halaman pencarian area aktifnya
-                if area_str and area_str != 'nan':
-                    return f"https://speedhome.com/rent/{area_str}"
-                return "https://speedhome.com/rent/kuala-lumpur" # Batasan default aman
-            
-            # Jika link sudah berupa format valid lainnya (seperti reels utuh)
-            if url_str.startswith("http://") or url_str.startswith("https://"):
-                return url_str
-                
-            return f"https://speedhome.com/{url_str.lstrip('/')}"
+            # Alihkan ke halaman rent berdasarkan area yang aktif di SPEEDHOME agar selalu valid saat diklik
+            return f"https://speedhome.com/rent/{area_str}"
 
-        # ⚡ SUDAH DIPERBAIKI: Nama fungsi di bawah ini sekarang sinkron dengan di atas
         df_terfilter["Link Listing"] = df_terfilter.apply(proteksi_dan_rute_url, axis=1)
         
         # 5. Sinkronisasi Nama Kolom Agar Sesuai dengan Tampilan Gambar Tabel
@@ -449,7 +438,7 @@ if 'data_master' in st.session_state:
             "Ukuran Unit (sqft)", "Status Furnitur", "Tautan Verifikasi SPEEDHOME"
         ]
         
-        # 7. Render Komponen Dataframe Utama Streamlit
+        # 7. Render Komponen Dataframe Utama Streamlit dengan Link Aktif
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
@@ -470,11 +459,8 @@ if 'data_master' in st.session_state:
         # 8. Catatan Keterangan Bawah Tabel
         st.caption("ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** merupakan hasil konversi formulasi internal.")
         
-        # 9. Render Tombol Export
-        try:
-            render_export_buttons("tab2")
-        except NameError:
-            pass
+        # 9. 📥 PERBAIKAN UTAMA: Melempar semua argumen wajib agar tombol download muncul tanpa error
+        render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab2")
 
     # ------------------------------------------
     # TAB 3: INOVASI & VISUALISASI DATA
