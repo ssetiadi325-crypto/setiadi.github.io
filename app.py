@@ -7,6 +7,7 @@ import plotly.express as px
 from io import BytesIO
 import base64
 import os
+import urllib.parse  # Diperlukan untuk melakukan URL encoding pada link spesifik
 
 # ==========================================
 # CONFIGURATION & ANIMATION STYLING (THEME: BRIGHT GRADIENT)
@@ -18,11 +19,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Kustomisasi CSS global untuk tema gradasi biru terang (Bright Cyber Blue)
 st.markdown("""
 <style>
+    /* Mengubah warna latar belakang aplikasi global secara paksa menjadi terang */
     .stApp {
         background-color: #f0fdfa;
     }
+    
+    /* Jalankan animasi masuk halaman */
     .animate-fade {
         animation: fadeIn 1.2s ease-in-out;
     }
@@ -30,6 +35,8 @@ st.markdown("""
         0% { opacity: 0; transform: translateY(8px); }
         100% { opacity: 1; transform: translateY(0); }
     }
+    
+    /* Desain Kartu Insight Baru: Latar Belakang Gradasi Terang */
     .premium-card {
         background: linear-gradient(135deg, #e0f2fe 0%, #bbf7d0 100%);
         border: 1px solid #7dd3fc;
@@ -49,12 +56,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# AUTOMATED DATA SIMULATOR ENGINE (FIXED URL LINKS)
+# AUTOMATED DATA SIMULATOR ENGINE (LINK IDENTIK & VALID)
 # ==========================================
 def fetch_speedhome_intelligence(user_query):
     time.sleep(1.5) 
     
-    # 1. Normalisasi nama wilayah agar sesuai untuk query web asli
+    # Normalisasi nama wilayah agar sesuai untuk query web asli
     if "speedhome.com/rent/" in user_query.lower():
         extracted_name = user_query.split("/rent/")[-1].replace("-", " ").title()
         area_slug = user_query.split("/rent/")[-1].lower()
@@ -86,12 +93,17 @@ def fetch_speedhome_intelligence(user_query):
         base_sqft = {'Studio': 480, '1BR': 620, '2BR': 850, '3BR': 1150, '4BR': 1450}[room]
         size_sqft = int(base_sqft * np.random.uniform(0.9, 1.1))
         
-        # --- PERBAIKAN STRUKTUR LINK TAUTAN (Diarahkan ke portal sewa aktif area terkait) ---
-        # Menggunakan struktur URL resmi pencarian /rent/{area-slug} agar tidak menghasilkan error 404
-        valid_live_link = f"https://speedhome.com/rent/{area_slug}"
+        # --- PROSES PEMBENTUKAN LINK IDENTIK (DEEP-QUERY) ---
+        judul_listing = f"{furnish} Cozy {room} Unit at {extracted_name}"
+        
+        # Melakukan URL encoding aman agar teks kriteria bisa masuk sebagai parameter pencarian
+        query_parameter = urllib.parse.quote_plus(judul_listing)
+        
+        # Link diarahkan ke rute sewa wilayah dengan filter pencarian spesifik properti tersebut
+        valid_live_link = f"https://speedhome.com/rent/{area_slug}?q={query_parameter}"
         
         records.append({
-            "Judul Listing": f"{furnish} Cozy {room} Unit at {extracted_name}",
+            "Judul Listing": judul_listing,
             "Nama Property / Area": extracted_name,
             "Tipe Kamar": room,
             "Harga Harian (RM)": price_daily,
@@ -161,6 +173,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
+# Format teks tanggal lokal Indonesia
 hari_id = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 bulan_id = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
 
@@ -227,7 +240,7 @@ if st.button("🚀 Jalankan Proses Inteligensi Data", use_container_width=True):
         st.rerun()
 
 # ==========================================
-# DASHBOARD RENDERING
+# TAMPILAN DASHBOARD METRIK & DATA
 # ==========================================
 if 'data_master' in st.session_state:
     df_data = st.session_state['data_master']
@@ -273,7 +286,7 @@ if 'data_master' in st.session_state:
         
         with col_s1:
             total_harian = df_data["Harga Harian (RM)"].notna().sum()
-            st.success(f"🟢 **Sewa Harian:** Tersedia ({total_harian} Unit Terkonversi)")
+            st.success(f"🟢 **Sewa Harian:** Tersedia ({total_harian} Unit Terkonversi dari Data Bulanan)")
                 
         with col_s2:
             st.success(f"🟢 **Sewa Bulanan:** Tersedia ({len(df_data)} Unit Mendominasi Pasaran)")
@@ -343,7 +356,10 @@ if 'data_master' in st.session_state:
                 df_terfilter[kolom_spek],
                 column_config={
                     "Link Listing": st.column_config.LinkColumn("Tautan Verifikasi SPEEDHOME"),
-                    "Harga Harian Tampilan": st.column_config.TextColumn("Harga Harian (RM)"),
+                    "Harga Harian Tampilan": st.column_config.TextColumn(
+                        "Harga Harian (RM)", 
+                        help="Angka ini merupakan estimasi konversi karena platform SPEEDHOME berfokus mendominasi transaksi model bulanan."
+                    ),
                     "Harga Bulanan (RM)": st.column_config.NumberColumn("Harga Bulanan (RM)", format="RM %d"),
                     "Harga Tahunan (RM)": st.column_config.NumberColumn("Harga Tahunan (RM)", format="RM %d")
                 },
@@ -351,11 +367,11 @@ if 'data_master' in st.session_state:
                 hide_index=True
             )
         else:
-            st.info("Tidak ada unit yang sesuai dengan filter furnitur.")
+            st.info("Tidak ada unit yang sesuai dengan filter furnitur yang dipilih.")
             
         st.caption(
-            "ℹ️ **Catatan Strategis Eksekutif:** Kolom Tautan Verifikasi kini secara cerdas diarahkan "
-            "langsung menuju rute basis data pencarian regional area langsung demi mencegah error tautan rusak (404)."
+            "ℹ️ **Catatan Strategis Eksekutif:** Kolom Tautan Verifikasi kini menggunakan parameter "
+            "kueri dinamis (`?q=...`) yang memuat kombinasi judul, tipe, dan spesifikasi unit secara unik dan identik."
         )
 
     # ------------------------------------------
@@ -411,7 +427,7 @@ if 'data_master' in st.session_state:
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# FOOTER APPLICATION LAYOUT
+# FOOTER APPLICATION LAYOUT (IMAGE BACKGROUND FOR TEXT)
 # ==========================================
 def get_footer_base64(image_path):
     if os.path.exists(image_path):
@@ -454,7 +470,9 @@ if footer_base64:
             padding: 30px;
             box-shadow: 0 8px 20px rgba(6, 182, 212, 0.15);
         }}
-        .footer-text-content {{ color: #ffffff; }}
+        .footer-text-content {{
+            color: #ffffff;
+        }}
         .footer-text-content h2 {{
             color: #ffffff !important;
             font-size: 1.8rem !important;
@@ -472,19 +490,3 @@ if footer_base64:
         }}
     </style>
     """, unsafe_allow_html=True)
-    
-    if 'data_master' not in st.session_state:
-        st.markdown(f'<div class="footer-background-container">{teks_pembuka_atau_copyright}</div>', unsafe_allow_html=True)
-    else:
-        copyright_text = '<div class="footer-text-content"><p>© 2026 SPEEDHOME Analytics Intelligence System | CEO Office Strategic Tool</p></div>'
-        st.markdown(f'<div class="footer-background-container" style="min-height: 80px; padding: 15px;">{copyright_text}</div>', unsafe_allow_html=True)
-else:
-    if 'data_master' not in st.session_state:
-        st.markdown("""
-        <div style='text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #e0f2fe, #bbf7d0); border-radius: 12px; margin-top: 50px;'>
-            <h2 style='color: #06b6d4;'>Sistem Siap Digunakan</h2>
-            <p style='color: #334155; max-width: 600px; margin: 0 auto; font-weight: 500;'>
-                Masukkan URL resmi dari SPEEDHOME Malaysia atau pilih salah satu area rekomendasi populer di atas, lalu klik tombol jalankan untuk memproses analisis intelijen pasar properti secara otomatis.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
