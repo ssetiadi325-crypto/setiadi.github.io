@@ -378,16 +378,23 @@ if 'data_master' in st.session_state:
                 use_container_width=True
             )
 
-    # ------------------------------------------
-    # TAB 2: TABEL DAFTAR UNIT (SUSUNAN ASLI UTUH)
+# ------------------------------------------
+    # TAB 2: TABEL DAFTAR UNIT (REVISI FILTER & LINK VERIFIKASI)
     # ------------------------------------------
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
         
+        # Mengambil list unik status furnitur yang tersedia di data
+        opsi_furnitur_tersedia = list(df_data["Status Furnitur"].unique())
+        
+        # [PERBAIKAN] Menetapkan default hanya ke SATU nilai (contoh: 'Fully Furnished')
+        # Jika 'Fully Furnished' tidak ada di data, maka akan mengambil opsi pertama yang tersedia
+        default_filter = ['Fully Furnished'] if 'Fully Furnished' in opsi_furnitur_tersedia else [opsi_furnitur_tersedia[0]]
+        
         opsi_furnitur = st.multiselect(
             "Filter Berdasarkan Kelengkapan Furnitur:",
-            options=list(df_data["Status Furnitur"].unique()),
-            default=list(df_data["Status Furnitur"].unique())
+            options=opsi_furnitur_tersedia,
+            default=default_filter  # <--- Sekarang defaultnya hanya memilih satu furnitur
         )
         
         df_terfilter = df_data[df_data["Status Furnitur"].isin(opsi_furnitur)].copy()
@@ -401,22 +408,34 @@ if 'data_master' in st.session_state:
 
         df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
         
+        # [PERBAIKAN] Memastikan urutan kolom sesuai dengan gambar header Anda + menyertakan Link Listing di akhir
         kolom_spek = [
-            "Judul Listing", "Nama Property / Area", "Tipe Kamar", 
-            "Harga Harian Tampilan", "Harga Bulanan (RM)", "Harga Tahunan (RM)", 
-            "Ukuran Unit (sqft)", "Status Furnitur", "Link Listing"
+            "Judul Listing", 
+            "Nama Property / Area", 
+            "Tipe Kamar", 
+            "Harga Harian Tampilan", 
+            "Harga Bulanan (RM)", 
+            "Harga Tahunan (RM)", 
+            "Ukuran Unit (sqft)", 
+            "Status Furnitur", 
+            "Link Listing"  # <--- Kolom ini wajib masuk list agar bisa dirender sebagai tombol tautan
         ]
         
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
-                "Link Listing": st.column_config.LinkColumn("Tautan Verifikasi SPEEDHOME"),
+                # Mengonversi string URL menjadi tombol link interaktif yang bisa diklik langsung menuju website SPEEDHOME
+                "Link Listing": st.column_config.LinkColumn(
+                    "Tautan Verifikasi SPEEDHOME",
+                    display_text="Buka Halaman SPEEDHOME ↗"  # Mengubah tampilan teks URL panjang menjadi tombol rapi
+                ),
                 "Harga Harian Tampilan": st.column_config.TextColumn(
                     "Harga Harian (RM)", 
                     help="Angka ini merupakan estimasi konversi karena platform SPEEDHOME berfokus mendominasi transaksi model bulanan."
                 ),
                 "Harga Bulanan (RM)": st.column_config.NumberColumn("Harga Bulanan (RM)", format="RM %d"),
-                "Harga Tahunan (RM)": st.column_config.NumberColumn("Harga Tahunan (RM)", format="RM %d")
+                "Harga Tahunan (RM)": st.column_config.NumberColumn("Harga Tahunan (RM)", format="RM %d"),
+                "Ukuran Unit (sqft)": st.column_config.NumberColumn("Ukuran Unit (sqft)", format="%d sqft")
             },
             use_container_width=True,
             hide_index=True
@@ -425,8 +444,7 @@ if 'data_master' in st.session_state:
         st.caption(
             "ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** pada kolom Harga Harian "
             "bukan merupakan tarif sewa harian murni dari pemilik properti. Platform SPEEDHOME pada dasarnya merupakan "
-            "platform *managed-rental* yang **berfokus mendominasi pasar sewa bulanan dan tahunan**. Angka harian tersebut "
-            "dihasiilkan melalui kalkulator konversi internal berbasis algoritma komposit untuk keperluan analisis komparatif makro."
+            "platform *managed-rental* yang **berfokus mendominasi pasar sewa bulanan dan tahunan**."
         )
 
     # ------------------------------------------
