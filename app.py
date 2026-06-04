@@ -102,7 +102,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# AUTOMATED DATA SIMULATOR ENGINE 
+# AUTOMATED DATA SIMULATOR ENGINE (FIXED LINK STRUCTURE)
 # ==========================================
 def fetch_speedhome_intelligence(user_query):
     time.sleep(1.5) 
@@ -116,6 +116,9 @@ def fetch_speedhome_intelligence(user_query):
     
     room_segments = ['Studio', '1BR', '2BR', '3BR', '4BR']
     furnishing_status = ['Fully Furnished', 'Partially Furnished', 'Unfurnished']
+    
+    # Kumpulan karakter acak untuk menghasilkan ID unik alfanumerik (6 digit) di akhir URL
+    chars = list("abcdefghijklmnopqrstuvwxyz")
     
     total_listings = np.random.randint(12, 40)
     records = []
@@ -136,7 +139,14 @@ def fetch_speedhome_intelligence(user_query):
         base_sqft = {'Studio': 480, '1BR': 620, '2BR': 850, '3BR': 1150, '4BR': 1450}[room]
         size_sqft = int(base_sqft * np.random.uniform(0.9, 1.1))
         
-        ad_id = np.random.randint(200000, 890000)
+        # 1. Membuat Alfanumerik ID unik (6 huruf kecil) seperti contoh 'nhtzdaey'
+        ad_id_alpha = "".join(np.random.choice(chars, 6))
+        
+        # 2. Membuat slug nama properti/area (huruf kecil, spasi diganti dengan tanda hubung)
+        area_slug = extracted_name.lower().replace(" ", "-")
+        
+        # 3. Penggabungan URL baru sesuai standar SPEEDHOME Details
+        custom_link = f"https://speedhome.com/details/{area_slug}-{ad_id_alpha}"
         
         records.append({
             "Judul Listing": f"{furnish} Cozy {room} Unit at {extracted_name}",
@@ -147,7 +157,7 @@ def fetch_speedhome_intelligence(user_query):
             "Harga Tahunan (RM)": price_yearly,
             "Ukuran Unit (sqft)": size_sqft,
             "Status Furnitur": furnish,
-            "Link Listing": f"https://speedhome.com/ads/{ad_id}"
+            "Link Listing": custom_link  # Menggunakan struktur link yang baru
         })
         
     return pd.DataFrame(records), extracted_name
