@@ -390,7 +390,7 @@ if 'data_master' in st.session_state:
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
 # =========================================================================
-    # TAB 2: TABEL DAFTAR UNIT (SMART ROUTING UNTUK ID YANG REJECT/EXPIRED)
+    # TAB 2: TABEL DAFTAR UNIT (PERBAIKAN TYPO NAMEERROR & SMART ROUTING)
     # =========================================================================
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -423,12 +423,12 @@ if 'data_master' in st.session_state:
             if not url_str or url_str.lower() == 'nan':
                 return "https://speedhome.com"
             
-            # Jika link berisi '/rent/details/' yang terbukti mati/kosong saat dicari
+            # Jika terdeteksi format '/rent/details/' yang sudah kedaluwarsa di web SPEEDHOME
             if "/rent/details/" in url_str:
-                # Alihkan langsung ke halaman pencarian area aktifnya agar user bisa verifikasi area
+                # Alihkan secara halus ke halaman pencarian area aktifnya
                 if area_str and area_str != 'nan':
                     return f"https://speedhome.com/rent/{area_str}"
-                return "https://speedhome.com/rent/kuala-lumpur" # Fallback default
+                return "https://speedhome.com/rent/kuala-lumpur" # Batasan default aman
             
             # Jika link sudah berupa format valid lainnya (seperti reels utuh)
             if url_str.startswith("http://") or url_str.startswith("https://"):
@@ -436,8 +436,8 @@ if 'data_master' in st.session_state:
                 
             return f"https://speedhome.com/{url_str.lstrip('/')}"
 
-        # Terapkan fungsi pengecekan berbasis baris (axis=1)
-        df_terfilter["Link Listing"] = df_terfilter.apply(proteksi_and_rute_url, axis=1)
+        # ⚡ SUDAH DIPERBAIKI: Nama fungsi di bawah ini sekarang sinkron dengan di atas
+        df_terfilter["Link Listing"] = df_terfilter.apply(proteksi_dan_rute_url, axis=1)
         
         # 5. Sinkronisasi Nama Kolom Agar Sesuai dengan Tampilan Gambar Tabel
         df_terfilter = df_terfilter.rename(columns={"Link Listing": "Tautan Verifikasi SPEEDHOME"})
@@ -453,7 +453,6 @@ if 'data_master' in st.session_state:
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
-                # Membuka Link hasil rute aman tanpa resiko halaman kosong 'No Properties Found'
                 "Tautan Verifikasi SPEEDHOME": st.column_config.LinkColumn(
                     "Tautan Verifikasi SPEEDHOME"
                 ),
