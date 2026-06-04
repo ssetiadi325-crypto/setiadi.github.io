@@ -412,16 +412,23 @@ if 'data_master' in st.session_state:
 
         df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
         
+        # Samakan nama kolom terakhir agar sesuai dengan konfigurasi tampilan
+        df_terfilter = df_terfilter.rename(columns={"Link Listing": "Tautan Verifikasi SPEEDHOME"})
+        
         kolom_spek = [
             "Judul Listing", "Nama Property / Area", "Tipe Kamar", 
             "Harga Harian Tampilan", "Harga Bulanan (RM)", "Harga Tahunan (RM)", 
-            "Ukuran Unit (sqft)", "Status Furnitur", "Link Listing"
+            "Ukuran Unit (sqft)", "Status Furnitur", "Tautan Verifikasi SPEEDHOME"
         ]
         
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
-                "Link Listing": st.column_config.LinkColumn("Tautan Verifikasi SPEEDHOME"),
+                # Menggunakan LinkColumn dan mencocokkan nama kolom agar bisa diklik langsung
+                "Tautan Verifikasi SPEEDHOME": st.column_config.LinkColumn(
+                    "Tautan Verifikasi SPEEDHOME",
+                    display_text=r"https://speedhome\.com/ads/(\d+)" # Menampilkan pola teks ringkas yang rapi
+                ),
                 "Harga Harian Tampilan": st.column_config.TextColumn(
                     "Harga Harian (RM)", 
                     help="Angka ini merupakan estimasi konversi internal platform."
@@ -435,7 +442,7 @@ if 'data_master' in st.session_state:
         
         st.caption("ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** merupakan hasil konversi formulasi internal.")
         
-        render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab2")
+        render_export_buttons("tab2")
 
     # ------------------------------------------
     # TAB 3: INOVASI & VISUALISASI DATA
