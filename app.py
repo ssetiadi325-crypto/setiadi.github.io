@@ -211,14 +211,14 @@ st.markdown(f"""
     /* ==========================================
        ⚡ PERBAIKAN RESPONSIVITAS TANGGAL DI HP
        ========================================== */
-    @media (max-width: 768px) {
+    @media (max-width: 768px) {{
         .realtime-clock-container {{
-            justify-content: center; /* Rata tengah di HP agar lebih simetris */
-            margin-bottom: 2px !important;  /* Memangkas jarak kosong bawah secara ekstrem */
-            padding: 2px 0 !important;      /* Memperkecil tinggi area komponen */
-            font-size: 0.8rem !important;   /* Memperkecil ukuran teks agar hemat ruang */
+            justify-content: center !important;
+            margin-bottom: 2px !important;  
+            padding: 2px 0 !important;      
+            font-size: 0.8rem !important;   
         }}
-    }
+    }}
 </style>
 """, unsafe_allow_html=True)
 
