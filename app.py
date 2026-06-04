@@ -457,7 +457,7 @@ if 'data_master' in st.session_state:
         )
         
         # 8. Catatan Keterangan Bawah Tabel
-        st.caption("ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** merupakan hasil konversi formulasi internal.")
+        st.caption("ℹ️ **Indikator (Estimasi) harian dihasilkan melalui pro-rata formulasi internal. Karena SPEEDHOME berfokus pada sewa jangka panjang, estimasi ini belum memperhitungkan premium pricing sewa harian riil di pasar yang cenderung jauh lebih tinggi")
         
         # 9. 📥 PERBAIKAN UTAMA: Melempar semua argumen wajib agar tombol download muncul tanpa error
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab2")
