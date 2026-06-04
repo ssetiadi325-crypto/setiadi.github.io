@@ -180,6 +180,7 @@ else:
 
 st.markdown(f"""
 <style>
+    /* Style Tanggal Default (Desktop) */
     .realtime-clock-container {{
         display: flex;
         justify-content: flex-end;
@@ -206,6 +207,18 @@ st.markdown(f"""
         margin-bottom: 25px;
         box-shadow: 0 8px 20px rgba(6, 182, 212, 0.2);
     }}
+
+    /* ==========================================
+       ⚡ PERBAIKAN RESPONSIVITAS TANGGAL DI HP
+       ========================================== */
+    @media (max-width: 768px) {
+        .realtime-clock-container {{
+            justify-content: center; /* Rata tengah di HP agar lebih simetris */
+            margin-bottom: 2px !important;  /* Memangkas jarak kosong bawah secara ekstrem */
+            padding: 2px 0 !important;      /* Memperkecil tinggi area komponen */
+            font-size: 0.8rem !important;   /* Memperkecil ukuran teks agar hemat ruang */
+        }}
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -220,17 +233,8 @@ teks_tanggal = f"{nama_hari}, {tgl_sekarang.day} {nama_bulan} {tgl_sekarang.year
 
 st.markdown(f"""
 <div class="realtime-clock-container">
-    <span style="margin-right: 8px;">📅</span>
+    <span style="margin-right: 4px;">📅</span>
     <span>{teks_tanggal}</span>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div class="animate-fade hero-header">
-    <div class="header-content">
-        <h1 class="main-title-custom" style="color: white; margin-bottom: 8px;">🏢 Property Price Intelligence System</h1>
-        <p class="subtitle-custom" style="color: #f8fafc; font-size: 1.05rem;">CEO Office Strategic Decision Tool — Real-time Analytics Dashboard for SPEEDHOME Malaysia</p>
-    </div>
 </div>
 """, unsafe_allow_html=True)
 
