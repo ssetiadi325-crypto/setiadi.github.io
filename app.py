@@ -52,10 +52,33 @@ st.markdown("""
         box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
     }
 
+    /* Container Jam/Tanggal Utama untuk Desktop */
+    .realtime-clock-container {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 5px 10px;
+        margin-bottom: 10px;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 0.95rem;
+        color: #06b6d4;
+        font-weight: bold;
+    }
+
     /* =========================================================================
        ⚡ MODIFIKASI RESPONSIVITAS OTOMATIS (KHUSUS LAYAR HP SEPERTI SMARTPHONE)
        ========================================================================= */
     @media (max-width: 768px) {
+        /* FIX: Mengatasi tanggal terpotong di HP dengan memindahkan posisi ke tengah & menambah padding */
+        .realtime-clock-container {
+            justify-content: center !important;
+            padding-right: 15px !important;
+            padding-left: 15px !important;
+            font-size: 0.85rem !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
         /* Mengurangi padding samping aplikasi agar teks tidak tertekan ke dalam */
         .block-container {
             padding-left: 0.5rem !important;
@@ -84,7 +107,7 @@ st.markdown("""
             padding-right: 8px !important;
         }
 
-        /* Menyesuaikan ukuran teks kartu metrik "Cakupan Model Sewa" */
+        /* Menyesuaikan ukuran teks kartu metrik */
         [data-testid="stMetricValue"] {
             font-size: 1.15rem !important;
         }
@@ -166,7 +189,7 @@ def fetch_speedhome_intelligence(user_query):
     return pd.DataFrame(records), extracted_name
 
 # ==========================================
-# INTERFACE APPLICATION LAYOUT (HEADER & AMAN DARI BUG STUCK)
+# INTERFACE APPLICATION LAYOUT (HEADER)
 # ==========================================
 def get_base64_image(image_path):
     if os.path.exists(image_path):
@@ -193,17 +216,6 @@ else:
 
 st.markdown(f"""
 <style>
-    .realtime-clock-container {{
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        padding: 5px 10px;
-        margin-bottom: 10px;
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 0.95rem;
-        color: #06b6d4;
-        font-weight: bold;
-    }}
     .hero-header {{
         width: 100%;
         min-height: 220px;
@@ -230,7 +242,7 @@ tgl_sekarang = datetime.datetime.now()
 nama_hari = hari_id[tgl_sekarang.weekday()]
 nama_bulan = bulan_id[tgl_sekarang.month - 1]
 
-# Format teks akhir: "Rabu, 3 Juni 2026"
+# Format teks akhir: "Kamis, 4 Juni 2026"
 teks_tanggal = f"{nama_hari}, {tgl_sekarang.day} {nama_bulan} {tgl_sekarang.year}"
 
 # Tampilkan tanggal
@@ -284,34 +296,10 @@ if st.button("🚀 Jalankan Proses Inteligensi Data", use_container_width=True):
         
         bar_progress.progress(75)
         teks_status.text("📊 Mengkalkulasi statistik matematika (Mean, Median, Modus & Fair Price)...")
-        bar_progress.progress(100)
-        time.sleep(0.4)
-        teks_status.empty()
-        bar_progress.empty()
         
-        st.session_state['data_master'] = df_hasil
-        st.session_state['wilayah_aktif'] = nama_wilayah
-
-# ==========================================
-# TAMPILAN DASHBOARD METRIK & DATA
-# ==========================================
-if 'data_master' in st.session_state:
-    df_data = st.session_state['data_master']
-    wilayah_aktif = st.session_state['wilayah_aktif']
-    
-    # ------------------------------------------
-    # FUNGSI UTILITAS: EKSPOR DATA (Agar tidak menulis kode berulang)
-    # ------------------------------------------
-    def render_export_buttons(df_master, nama_wilayah):
-        st.write("---")
-        st.markdown("#### 📥 Ekspor Laporan Intelijen Pasar")
-        
-        tgl_skrg = datetime.datetime.now().strftime("%Y%m%d")
-        nama_file_dasar = f"SPEEDHOME_{nama_wilayah.replace(' ', '_')}_{tgl_skrg}"
-        
-        # 1. Siapkan Buffer Excel (Summary + Raw)
+        # --- PRE-COMPUTATION RINGKASAN HARGA (Efisiensi Memori & Kecepatan) ---
         summary_rows = []
-        for tipe, grup in df_master.groupby("Tipe Kamar"):
+        for tipe, grup in df_hasil.groupby("Tipe Kamar"):
             grup_harga = grup["Harga Bulanan (RM)"]
             grup_ukuran = grup["Ukuran Unit (sqft)"]
             modus_series = grup_harga.mode()
@@ -327,15 +315,44 @@ if 'data_master' in st.session_state:
                 "Harga Wajar / Fair Price (RM)": int(estimasi_fair),
                 "Rata-rata Ukuran (sqft)": round(grup_ukuran.mean(), 1)
             })
-        df_summary_table = pd.DataFrame(summary_rows).set_index("Tipe Unit")
+        df_summary_calculated = pd.DataFrame(summary_rows).set_index("Tipe Unit")
+        
+        # Simpan ke Session State
+        st.session_state['data_master'] = df_hasil
+        st.session_state['data_summary'] = df_summary_calculated
+        st.session_state['wilayah_aktif'] = nama_wilayah
+        
+        bar_progress.progress(100)
+        time.sleep(0.4)
+        teks_status.empty()
+        bar_progress.empty()
 
+# ==========================================
+# TAMPILAN DASHBOARD METRIK & DATA
+# ==========================================
+if 'data_master' in st.session_state:
+    df_data = st.session_state['data_master']
+    df_summary_table = st.session_state['data_summary']
+    wilayah_aktif = st.session_state['wilayah_aktif']
+    
+    # ------------------------------------------
+    # FUNGSI UTILITAS: EKSPOR DATA (Aman dari Bug Key Bentrok)
+    # ------------------------------------------
+    def render_export_buttons(df_master, df_summary, nama_wilayah, identity_suffix):
+        st.write("---")
+        st.markdown("#### 📥 Ekspor Laporan Intelijen Pasar")
+        
+        tgl_skrg = datetime.datetime.now().strftime("%Y%m%d")
+        nama_file_dasar = f"SPEEDHOME_{nama_wilayah.replace(' ', '_')}_{tgl_skrg}"
+        
+        # Siapkan Buffer Excel
         buffer_excel = BytesIO()
         with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
-            df_summary_table.to_excel(writer, sheet_name='Summary_Report')
+            df_summary.to_excel(writer, sheet_name='Summary_Report')
             df_master.to_excel(writer, index=False, sheet_name='All_Listings')
         data_excel_siap = buffer_excel.getvalue()
         
-        # 2. Render Tombol Berdampingan
+        # Render Tombol Berdampingan dengan Key Statis Terkelola per Tab
         col_dl1, col_dl2 = st.columns(2)
         with col_dl1:
             st.download_button(
@@ -344,7 +361,7 @@ if 'data_master' in st.session_state:
                 file_name=f"{nama_file_dasar}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True,
-                key=f"xlsx_{st.get_option('theme.primaryColor')}_{np.random.randint(0, 1000000)}" # Key unik dinamis agar tidak bentrok antar tab
+                key=f"xlsx_download_{identity_suffix}"
             )
         with col_dl2:
             st.download_button(
@@ -353,12 +370,10 @@ if 'data_master' in st.session_state:
                 file_name=f"{nama_file_dasar}.csv",
                 mime="text/csv",
                 use_container_width=True,
-                key=f"csv_{st.get_option('theme.primaryColor')}_{np.random.randint(0, 1000000)}"
+                key=f"csv_download_{identity_suffix}"
             )
 
-    # ------------------------------------------
-    # INISIALISASI TAB LAYOUT
-    # ------------------------------------------
+    # Inisialisasi Layout Tab
     tab_summary, tab_listings, tab_innovation = st.tabs([
         "📈 1. Tabel Ringkasan Harga", 
         "📋 2. Tabel Daftar Unit", 
@@ -370,26 +385,6 @@ if 'data_master' in st.session_state:
     # ------------------------------------------
     with tab_summary:
         st.markdown(f"### 📊 Resume Ringkasan Data Pasar Wilayah: **{wilayah_aktif}**")
-        
-        summary_rows = []
-        for tipe, grup in df_data.groupby("Tipe Kamar"):
-            grup_harga = grup["Harga Bulanan (RM)"]
-            grup_ukuran = grup["Ukuran Unit (sqft)"]
-            modus_series = grup_harga.mode()
-            nilai_modus = modus_series.iloc[0] if not modus_series.empty else grup_harga.median()
-            estimasi_fair = (grup_harga.median() * 0.65) + (grup_harga.mean() * 0.35)
-            
-            summary_rows.append({
-                "Tipe Unit": tipe,
-                "Jumlah Unit": len(grup),
-                "Rata-rata Harga (RM)": round(grup_harga.mean(), 1),
-                "Median Harga (RM)": int(grup_harga.median()),
-                "Modus Harga (RM)": int(nilai_modus),
-                "Harga Wajar / Fair Price (RM)": int(estimasi_fair),
-                "Rata-rata Ukuran (sqft)": round(grup_ukuran.mean(), 1)
-            })
-            
-        df_summary_table = pd.DataFrame(summary_rows).set_index("Tipe Unit")
         st.dataframe(df_summary_table, use_container_width=True)
         
         st.write("---")
@@ -399,7 +394,7 @@ if 'data_master' in st.session_state:
         with col_s1:
             total_harian = df_data["Harga Harian (RM)"].notna().sum()
             if total_harian > 0:
-                st.success(f"🟢 **Sewa Harian:** Tersedia ({total_harian} Unit Terkonversi dari Data Bulanan)")
+                st.success(f"🟢 **Sewa Harian:** Tersedia ({total_harian} Unit Terkonversi)")
             else:
                 st.info("ℹ️ **Sewa Harian:** Tidak Tersedia langsung.")
                 
@@ -408,8 +403,7 @@ if 'data_master' in st.session_state:
         with col_s3:
             st.success(f"🟢 **Sewa Tahunan:** Tersedia ({len(df_data)} Unit Siap Kontrak)")
             
-        # Panggil Fitur Download di Tab 1
-        render_export_buttons(df_data, wilayah_aktif)
+        render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
     # ------------------------------------------
     # TAB 2: TABEL DAFTAR UNIT
@@ -446,7 +440,7 @@ if 'data_master' in st.session_state:
                 "Link Listing": st.column_config.LinkColumn("Tautan Verifikasi SPEEDHOME"),
                 "Harga Harian Tampilan": st.column_config.TextColumn(
                     "Harga Harian (RM)", 
-                    help="Angka ini merupakan estimasi konversi karena platform SPEEDHOME berfokus mendominasi transaksi model bulanan."
+                    help="Angka ini merupakan estimasi konversi internal platform."
                 ),
                 "Harga Bulanan (RM)": st.column_config.NumberColumn("Harga Bulanan (RM)", format="RM %d"),
                 "Harga Tahunan (RM)": st.column_config.NumberColumn("Harga Tahunan (RM)", format="RM %d")
@@ -455,13 +449,9 @@ if 'data_master' in st.session_state:
             hide_index=True
         )
         
-        st.caption(
-            "ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** pada kolom Harga Harian "
-            "bukan merupakan tarif sewa harian murni dari pemilik properti."
-        )
+        st.caption("ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** merupakan hasil konversi formulasi internal.")
         
-        # Panggil Fitur Download di Tab 2
-        render_export_buttons(df_data, wilayah_aktif)
+        render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab2")
 
     # ------------------------------------------
     # TAB 3: INOVASI & VISUALISASI DATA
@@ -514,10 +504,10 @@ if 'data_master' in st.session_state:
             )
         st.markdown("</div>", unsafe_allow_html=True)
         
-        # Panggil Fitur Download di Tab 3
-        render_export_buttons(df_data, wilayah_aktif)
+        render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab3")
+
 # ==========================================
-# FOOTER APPLICATION LAYOUT (IMAGE BACKGROUND FOR TEXT)
+# FOOTER APPLICATION LAYOUT
 # ==========================================
 def get_footer_base64(image_path):
     if os.path.exists(image_path):
@@ -584,7 +574,7 @@ if footer_base64:
     if 'data_master' not in st.session_state:
         st.markdown(f'<div class="footer-background-container">{teks_pembuka_atau_copyright}</div>', unsafe_allow_html=True)
     else:
-        copyright_text = '<div class="footer-text-content"><p>© 2026 SPEEDHOME Analytics Intelligence System | CEO Office Strategic Tool</p></div>'
+        copyright_text = f'<div class="footer-text-content"><p>© {tgl_sekarang.year} SPEEDHOME Analytics Intelligence System | CEO Office Strategic Tool</p></div>'
         st.markdown(f'<div class="footer-background-container" style="min-height: 80px; padding: 15px;">{copyright_text}</div>', unsafe_allow_html=True)
 else:
     if 'data_master' not in st.session_state:
