@@ -390,7 +390,7 @@ if 'data_master' in st.session_state:
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
  # =========================================================================
-    # TAB 2: TABEL DAFTAR UNIT (FULL UTUH & VALID)
+    # TAB 2: TABEL DAFTAR UNIT (SINKRONISASI & PERBAIKAN LINK OTOMATIS)
     # =========================================================================
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -405,7 +405,7 @@ if 'data_master' in st.session_state:
         # 2. Proses Filtering Data
         df_terfilter = df_data[df_data["Status Furnitur"].isin(opsi_furnitur)].copy()
         
-        # 3. Fungsi Formating Tampilan Harga Harian
+        # 3. Fungsi Formatting Tampilan Harga Harian
         def format_harga_harian(row):
             harga_bulanan = row["Harga Bulanan (RM)"]
             harga_harian = row["Harga Harian (RM)"]
@@ -415,21 +415,39 @@ if 'data_master' in st.session_state:
 
         df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
         
-        # 4. Sinkronisasi Nama Kolom Link Agar Sesuai dengan Gambar Interface
+        # 4. 🛠️ FUNGSI PERBAIKAN LINK OTOMATIS (Mencegah Halaman Error / 404)
+        def perbaiki_url_speedhome(url):
+            url_str = str(url).strip()
+            # Jika kolom kosong atau nan
+            if not url_str or url_str.lower() == 'nan':
+                return "https://speedhome.com"
+            # Jika link sudah lengkap (dimulai dengan http atau https)
+            if url_str.startswith("http://") or url_str.startswith("https://"):
+                return url_str
+            # Jika link hanya tertulis sebagian (misal: "reels/flexus...")
+            if url_str.startswith("reels/") or url_str.startswith("ads/"):
+                return f"https://speedhome.com/{url_str}"
+            # Pengaman tambahan untuk teks mentah lainnya
+            return f"https://speedhome.com/{url_str.lstrip('/')}"
+
+        # Terapkan perbaikan ke kolom data
+        df_terfilter["Link Listing"] = df_terfilter["Link Listing"].apply(perbaiki_url_speedhome)
+        
+        # 5. Sinkronisasi Nama Kolom Link Agar Sesuai dengan Gambar Interface
         df_terfilter = df_terfilter.rename(columns={"Link Listing": "Tautan Verifikasi SPEEDHOME"})
         
-        # 5. Susunan Kolom yang Ditampilkan di Tabel
+        # 6. Susunan Kolom yang Ditampilkan di Tabel
         kolom_spek = [
             "Judul Listing", "Nama Property / Area", "Tipe Kamar", 
             "Harga Harian Tampilan", "Harga Bulanan (RM)", "Harga Tahunan (RM)", 
             "Ukuran Unit (sqft)", "Status Furnitur", "Tautan Verifikasi SPEEDHOME"
         ]
         
-        # 6. Render Komponen Dataframe Utama Streamlit
+        # 7. Render Komponen Dataframe Utama Streamlit
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
-                # LinkColumn tanpa 'display_text' agar mengarah ke URL /reels/ asli secara utuh
+                # Menggunakan LinkColumn murni untuk membuka URL hasil perbaikan sistem
                 "Tautan Verifikasi SPEEDHOME": st.column_config.LinkColumn(
                     "Tautan Verifikasi SPEEDHOME"
                 ),
@@ -444,10 +462,10 @@ if 'data_master' in st.session_state:
             hide_index=True
         )
         
-        # 7. Catatan Keterangan Bawah Tabel
+        # 8. Catatan Keterangan Bawah Tabel
         st.caption("ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** merupakan hasil konversi formulasi internal.")
         
-        # 8. Render Tombol Export (Aman dari NameError)
+        # 9. Render Tombol Export (Aman dari NameError)
         try:
             render_export_buttons("tab2")
         except NameError:
