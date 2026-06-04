@@ -215,7 +215,7 @@ st.markdown(f"""
         .realtime-clock-container {{
             justify-content: flex-end !important; /* TETAP DI KANAN */
             margin-bottom: 0px !important;       /* Pangkas jarak bawah agar menghemat ruang */
-            margin-top: -10px !important;        /* Tarik sedikit ke atas agar tidak terlalu tinggi */
+            margin-top: 10px !important;        /* Tarik sedikit ke atas agar tidak terlalu tinggi */
             padding: 2px 5px !important;         /* Perkecil ruang vertikal komponen */
         }}
     }}
