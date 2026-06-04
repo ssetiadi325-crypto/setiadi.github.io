@@ -56,14 +56,11 @@ st.markdown("""
        ⚡ MODIFIKASI RESPONSIVITAS OTOMATIS (KHUSUS LAYAR HP SEPERTI SMARTPHONE)
        ========================================================================= */
     @media (max-width: 768px) {
-        /* Mengurangi padding samping aplikasi agar teks tidak tertekan ke dalam */
         .block-container {
             padding-left: 0.5rem !important;
             padding-right: 0.5rem !important;
             padding-top: 1rem !important;
         }
-
-        /* Menjinakkan font judul utama dan sub-judul di Hero Header agar tidak hilang/terpotong */
         .hero-header {
             min-height: 140px !important;
             padding: 20px 15px !important;
@@ -76,34 +73,24 @@ st.markdown("""
         .hero-header p {
             font-size: 0.85rem !important;
         }
-
-        /* Penyesuaian teks tab judul agar muat sebaris di HP */
         button[data-baseweb="tab"] {
             font-size: 0.85rem !important;
             padding-left: 8px !important;
             padding-right: 8px !important;
         }
-
-        /* Menyesuaikan ukuran teks kartu metrik "Cakupan Model Sewa" */
         [data-testid="stMetricValue"] {
             font-size: 1.15rem !important;
         }
         [data-testid="stMetricLabel"] {
             font-size: 0.8rem !important;
         }
-
-        /* Memaksa box Plotly Chart & DataFrame agar memiliki scroll horizontal mandiri yang mulus */
         div[data-testid="stDataFrame"], .js-plotly-plot {
             overflow-x: auto !important;
             width: 100% !important;
         }
-        
-        /* Mengurangi padding kartu ROI di HP */
         .premium-card {
             padding: 12px !important;
         }
-        
-        /* Menyesuaikan ukuran gambar/teks footer di HP */
         .footer-background-container h2 {
             font-size: 1.3rem !important;
         }
@@ -166,7 +153,7 @@ def fetch_speedhome_intelligence(user_query):
     return pd.DataFrame(records), extracted_name
 
 # ==========================================
-# INTERFACE APPLICATION LAYOUT (HEADER & AMAN DARI BUG STUCK)
+# INTERFACE APPLICATION LAYOUT
 # ==========================================
 def get_base64_image(image_path):
     if os.path.exists(image_path):
@@ -230,10 +217,8 @@ tgl_sekarang = datetime.datetime.now()
 nama_hari = hari_id[tgl_sekarang.weekday()]
 nama_bulan = bulan_id[tgl_sekarang.month - 1]
 
-# Format teks akhir: "Rabu, 3 Juni 2026"
 teks_tanggal = f"{nama_hari}, {tgl_sekarang.day} {nama_bulan} {tgl_sekarang.year}"
 
-# Tampilkan tanggal
 st.markdown(f"""
 <div class="realtime-clock-container">
     <span style="margin-right: 8px;">📅</span>
@@ -241,7 +226,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Render HTML Header
 st.markdown("""
 <div class="animate-fade hero-header">
     <div class="header-content">
@@ -251,9 +235,8 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
 # ==========================================
-# PARAMETER INPUT MARKET DATA
+# PARAMETER INPUT MARKET DATA (FIXED INTERACTION)
 # ==========================================
 st.subheader("🔍 Parameter Pengumpulan Data Pasar")
 col_search1, col_search2 = st.columns([2, 1])
@@ -263,7 +246,12 @@ with col_search2:
     pilihan_dropdown = st.selectbox("Saran Nama Area/Apartemen:", saran_apartemen)
 
 with col_search1:
-    value_default = "" if pilihan_dropdown == "-- Cari Lewat Rekomendasi --" else f"https://speedhome.com/rent/{pilihan_dropdown.lower().replace(' ', '-')}"
+    # Menggunakan session_state untuk menstabilkan input agar tidak patah saat tab dipindah
+    if pilihan_dropdown != "-- Cari Lewat Rekomendasi --":
+        value_default = f"https://speedhome.com/rent/{pilihan_dropdown.lower().replace(' ', '-')}"
+    else:
+        value_default = ""
+        
     input_target = st.text_input(
         "Masukkan URL Lembar Publik SPEEDHOME atau Ketik Nama Area:",
         value=value_default,
@@ -306,7 +294,7 @@ if 'data_master' in st.session_state:
     ])
     
     # ------------------------------------------
-    # TAB 1: TABEL RINGKASAN HARGA (SUSUNAN ASLI UTUH)
+    # TAB 1: TABEL RINGKASAN HARGA
     # ------------------------------------------
     with tab_summary:
         st.markdown(f"### 📊 Resume Ringkasan Data Pasar Wilayah: **{wilayah_aktif}**")
@@ -379,7 +367,7 @@ if 'data_master' in st.session_state:
             )
 
     # ------------------------------------------
-    # TAB 2: TABEL DAFTAR UNIT (SUSUNAN ASLI UTUH)
+    # TAB 2: TABEL DAFTAR UNIT
     # ------------------------------------------
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -426,11 +414,11 @@ if 'data_master' in st.session_state:
             "ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** pada kolom Harga Harian "
             "bukan merupakan tarif sewa harian murni dari pemilik properti. Platform SPEEDHOME pada dasarnya merupakan "
             "platform *managed-rental* yang **berfokus mendominasi pasar sewa bulanan dan tahunan**. Angka harian tersebut "
-            "dihasiilkan melalui kalkulator konversi internal berbasis algoritma komposit untuk keperluan analisis komparatif makro."
+            "dihasilkan melalui kalkulator konversi internal berbasis algoritma komposit untuk keperluan analisis komparatif makro."
         )
 
     # ------------------------------------------
-    # TAB 3: INOVASI & VISUALISASI DATA (SUSUNAN ASLI UTUH)
+    # TAB 3: INOVASI & VISUALISASI DATA
     # ------------------------------------------
     with tab_innovation:
         st.markdown("### 💡 CEO Data-Driven Strategic Insights")
@@ -482,7 +470,7 @@ if 'data_master' in st.session_state:
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
-# FOOTER APPLICATION LAYOUT (IMAGE BACKGROUND FOR TEXT)
+# FOOTER APPLICATION LAYOUT
 # ==========================================
 def get_footer_base64(image_path):
     if os.path.exists(image_path):
@@ -549,7 +537,7 @@ if footer_base64:
     if 'data_master' not in st.session_state:
         st.markdown(f'<div class="footer-background-container">{teks_pembuka_atau_copyright}</div>', unsafe_allow_html=True)
     else:
-        copyright_text = '<div class="footer-text-content"><p>© 2026 SPEEDHOME Analytics Intelligence System | CEO Office Strategic Tool</p></div>'
+        copyright_text = f'<div class="footer-text-content"><p>© {tgl_sekarang.year} SPEEDHOME Analytics Intelligence System | CEO Office Strategic Tool</p></div>'
         st.markdown(f'<div class="footer-background-container" style="min-height: 80px; padding: 15px;">{copyright_text}</div>', unsafe_allow_html=True)
 else:
     if 'data_master' not in st.session_state:
@@ -559,5 +547,11 @@ else:
             <p style='color: #334155; max-width: 600px; margin: 0 auto; font-weight: 500;'>
                 Masukkan URL resmi dari SPEEDHOME Malaysia atau pilih salah satu area rekomendasi populer di atas, lalu klik tombol jalankan untuk memproses analisis intelijen pasar properti secara otomatis.
             </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown(f"""
+        <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #e0f2fe, #bbf7d0); border-radius: 12px; margin-top: 50px;'>
+            <p style='color: #334155; margin: 0; font-weight: 500;'>© {tgl_sekarang.year} SPEEDHOME Analytics Intelligence System | CEO Office Strategic Tool</p>
         </div>
         """, unsafe_allow_html=True)
