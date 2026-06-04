@@ -180,6 +180,7 @@ else:
 
 st.markdown(f"""
 <style>
+    /* Style Tanggal Default (Desktop) */
     .realtime-clock-container {{
         display: flex;
         justify-content: flex-end;
@@ -205,6 +206,18 @@ st.markdown(f"""
         border: 1px solid #06b6d4;
         margin-bottom: 25px;
         box-shadow: 0 8px 20px rgba(6, 182, 212, 0.2);
+    }}
+
+    /* =========================================================
+       ⚡ KHUSUS LAYAR HP: PERKECIL TINGGI TANPA UBAH POSISI/DESAIN
+       ========================================================= */
+    @media (max-width: 768px) {{
+        .realtime-clock-container {{
+            justify-content: flex-end !important; /* TETAP DI KANAN */
+            margin-bottom: 0px !important;       /* Pangkas jarak bawah agar menghemat ruang */
+            margin-top: -10px !important;        /* Tarik sedikit ke atas agar tidak terlalu tinggi */
+            padding: 2px 5px !important;         /* Perkecil ruang vertikal komponen */
+        }}
     }}
 </style>
 """, unsafe_allow_html=True)
