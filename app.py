@@ -101,6 +101,18 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# =========================================================================
+# 🌟 FITUR TAMBAHAN 1: SIDEBAR METADATA & CONTROL PANEL (PROFESSIONAL LOOK)
+# =========================================================================
+with st.sidebar:
+    st.markdown("## 🏢 SPEEDHOME Intelligence")
+    st.markdown("---")
+    st.markdown("**Version:** `v2.5.0-Enterprise` ")
+    st.markdown("**Environment:** `Production` ")
+    st.markdown("**Target Platform:** SPEEDHOME Malaysia")
+    st.markdown("---")
+    st.info("💡 **Tips Penggunaan:** Jika visualisasi tidak muncul pada Tab, pastikan Anda menekan tombol **'Jalankan Proses Inteligensi Data'** terlebih dahulu di halaman utama.")
+
 # ==========================================
 # AUTOMATED DATA SIMULATOR ENGINE 
 # ==========================================
@@ -371,6 +383,17 @@ if 'data_master' in st.session_state:
         st.markdown(f"### 📊 Resume Ringkasan Data Pasar Wilayah: **{wilayah_aktif}**")
         st.dataframe(df_summary_table, use_container_width=True)
         
+        # 🌟 FITUR TAMBAHAN 2: ANALISIS ANGGARAN STRATEGIS (BUSINESS ACCUMEN ASSESSMENT)
+        st.write("---")
+        st.markdown("#### 🏢 Analisis Kelayakan Ekspansi Korporat")
+        budget_ceiling = 2500
+        rata_rata_wilayah = df_data["Harga Bulanan (RM)"].mean()
+        
+        if rata_rata_wilayah > budget_ceiling:
+            st.error(f"🚨 **Peringatan Strategis Korporat:** Rata-rata harga sewa pasar di wilayah {wilayah_aktif} (RM {rata_rata_wilayah:.0f}) saat ini **MELEBIHI** batas atas anggaran investasi strategis (RM {budget_ceiling}).")
+        else:
+            st.success(f"✅ **Analisis Kelayakan Finansial:** Rata-rata harga sewa pasar di wilayah {wilayah_aktif} (RM {rata_rata_wilayah:.0f}) berada dalam rentang **AMAN** di bawah pagu anggaran investasi korporat (RM {budget_ceiling}). Wilayah ini direkomendasikan untuk ekspansi.")
+        
         st.write("---")
         st.markdown("#### 🌐 Cakupan Ketersediaan Model Sewa")
         col_s1, col_s2, col_s3 = st.columns(3)
@@ -389,7 +412,7 @@ if 'data_master' in st.session_state:
             
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
-# =========================================================================
+    # =========================================================================
     # TAB 2: TABEL DAFTAR UNIT (PERBAIKAN RUNTIME ERROR & VERIFIKASI LINK 404)
     # =========================================================================
     with tab_listings:
@@ -419,179 +442,4 @@ if 'data_master' in st.session_state:
         def proteksi_dan_rute_url(row):
             area_str = str(row["Nama Property / Area"]).strip().lower().replace(" ", "-")
             
-            # Jika area kosong atau bernilai nan, kembalikan ke homepage utama SPEEDHOME
-            if not area_str or area_str == 'nan':
-                return "https://speedhome.com"
-            
-            # Alihkan ke halaman rent berdasarkan area yang aktif di SPEEDHOME agar selalu valid saat diklik
-            return f"https://speedhome.com/rent/{area_str}"
-
-        df_terfilter["Link Listing"] = df_terfilter.apply(proteksi_dan_rute_url, axis=1)
-        
-        # 5. Sinkronisasi Nama Kolom Agar Sesuai dengan Tampilan Gambar Tabel
-        df_terfilter = df_terfilter.rename(columns={"Link Listing": "Tautan Verifikasi SPEEDHOME"})
-        
-        # 6. Susunan Kolom yang Ditampilkan di Tabel
-        kolom_spek = [
-            "Judul Listing", "Nama Property / Area", "Tipe Kamar", 
-            "Harga Harian Tampilan", "Harga Bulanan (RM)", "Harga Tahunan (RM)", 
-            "Ukuran Unit (sqft)", "Status Furnitur", "Tautan Verifikasi SPEEDHOME"
-        ]
-        
-        # 7. Render Komponen Dataframe Utama Streamlit dengan Link Aktif
-        st.dataframe(
-            df_terfilter[kolom_spek],
-            column_config={
-                "Tautan Verifikasi SPEEDHOME": st.column_config.LinkColumn(
-                    "Tautan Verifikasi SPEEDHOME"
-                ),
-                "Harga Harian Tampilan": st.column_config.TextColumn(
-                    "Harga Harian (RM)", 
-                    help="Angka ini merupakan estimasi konversi internal platform."
-                ),
-                "Harga Bulanan (RM)": st.column_config.NumberColumn("Harga Bulanan (RM)", format="RM %d"),
-                "Harga Tahunan (RM)": st.column_config.NumberColumn("Harga Tahunan (RM)", format="RM %d")
-            },
-            use_container_width=True,
-            hide_index=True
-        )
-        
-        # 8. Catatan Keterangan Bawah Tabel
-        st.caption("ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** merupakan hasil konversi formulasi internal.")
-        
-        # 9. 📥 PERBAIKAN UTAMA: Melempar semua argumen wajib agar tombol download muncul tanpa error
-        render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab2")
-
-    # ------------------------------------------
-    # TAB 3: INOVASI & VISUALISASI DATA
-    # ------------------------------------------
-    with tab_innovation:
-        st.markdown("### 💡 CEO Data-Driven Strategic Insights")
-        st.markdown("<p style='color: #06b6d4;'><b>Visualisasi Makro & Simulasi ROI Investasi Komersial</b></p>", unsafe_allow_html=True)
-        
-        col_grafik1, col_grafik2 = st.columns(2)
-        
-        with col_grafik1:
-            fig_box = px.box(
-                df_data, x="Tipe Kamar", y="Harga Bulanan (RM)",
-                color="Tipe Kamar", title="Rentang Distribusi Harga Pasar Real-time",
-                template="plotly_white"
-            )
-            st.plotly_chart(fig_box, use_container_width=True)
-            
-        with col_grafik2:
-            fig_scatter = px.scatter(
-                df_data, x="Ukuran Unit (sqft)", y="Harga Bulanan (RM)",
-                color="Status Furnitur", size="Harga Bulanan (RM)",
-                title="Korelasi Spasial Luas Bangunan vs Harga Sewa",
-                template="plotly_white"
-            )
-            st.plotly_chart(fig_scatter, use_container_width=True)
-            
-        st.write("---")
-        st.markdown("<div class='premium-card'>", unsafe_allow_html=True)
-        st.markdown("#### 🧮 Kalkulator Simulasi Estimasi Gross Rental Yield")
-        
-        col_roi1, col_roi2 = st.columns(2)
-        with col_roi1:
-            segmen_terpilih = st.selectbox("Pilih Segmen Properti Target Investasi:", df_data["Tipe Kamar"].unique())
-            harga_sewa_median = df_data[df_data["Tipe Kamar"] == segmen_terpilih]["Harga Bulanan (RM)"].median()
-            
-            input_harga_beli = st.number_input(
-                "Proyeksi Harga Pembelian Aset Properti (RM):",
-                value=int(harga_sewa_median * 230), step=25000
-            )
-            
-        with col_roi2:
-            pendapatan_tahunan = harga_sewa_median * 12
-            persentase_roi = (pendapatan_tahunan / input_harga_beli) * 100
-            
-            st.metric(
-                label=f"Proyeksi Gross Rental Yield ({segmen_terpilih})",
-                value=f"{persentase_roi:.2f} % / Tahun",
-                delta="Sangat Menjanjikan (> 5.5%)" if persentase_roi >= 5.5 else "Yield Standard/Rendah (< 5.5%)"
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab3")
-
-# ==========================================
-# FOOTER APPLICATION LAYOUT
-# ==========================================
-def get_footer_base64(image_path):
-    if os.path.exists(image_path):
-        try:
-            with open(image_path, "rb") as img_file:
-                return base64.b64encode(img_file.read()).decode()
-        except Exception:
-            return ""
-    return ""
-
-nama_file_footer = "image_024abcd.jpg"
-footer_base64 = get_footer_base64(nama_file_footer)
-
-teks_pembuka_atau_copyright = """
-    <div class="footer-text-content">
-        <h2>Sistem Siap Digunakan</h2>
-        <p>Masukkan URL resmi dari SPEEDHOME Malaysia atau pilih salah satu area rekomendasi populer di atas, lalu klik tombol jalankan untuk memproses analisis intelijen pasar properti secara otomatis.</p>
-    </div>
-"""
-
-if footer_base64:
-    st.markdown(f"""
-    <style>
-        .footer-background-container {{
-            width: 100%;
-            min-height: 160px; 
-            background-image: linear-gradient(135deg, rgba(6, 182, 212, 0.85), rgba(59, 130, 246, 0.90)), 
-                              url("data:image/jpeg;base64,{footer_base64}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            border-radius: 12px;
-            border: 1px solid #06b6d4;
-            margin-top: 50px; 
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 30px;
-            box-shadow: 0 8px 20px rgba(6, 182, 212, 0.15);
-        }}
-        .footer-text-content {{
-            color: #ffffff;
-        }}
-        .footer-text-content h2 {{
-            color: #ffffff !important;
-            font-size: 1.8rem !important;
-            font-weight: 700 !important;
-            margin-bottom: 10px !important;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
-        }}
-        .footer-text-content p {{
-            color: #f1f5f9 !important;
-            font-size: 1rem !important;
-            max-width: 750px;
-            margin: 0 auto !important;
-            font-weight: 500;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
-        }}
-    </style>
-    """, unsafe_allow_html=True)
-    
-    if 'data_master' not in st.session_state:
-        st.markdown(f'<div class="footer-background-container">{teks_pembuka_atau_copyright}</div>', unsafe_allow_html=True)
-    else:
-        copyright_text = '<div class="footer-text-content"><p>© 2026 SPEEDHOME Analytics Intelligence System | CEO Office Strategic Tool</p></div>'
-        st.markdown(f'<div class="footer-background-container" style="min-height: 80px; padding: 15px;">{copyright_text}</div>', unsafe_allow_html=True)
-else:
-    if 'data_master' not in st.session_state:
-        st.markdown("""
-        <div style='text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #e0f2fe, #bbf7d0); border-radius: 12px; margin-top: 50px;'>
-            <h2 style='color: #06b6d4;'>Sistem Siap Digunakan</h2>
-            <p style='color: #334155; max-width: 600px; margin: 0 auto; font-weight: 500;'>
-                Masukkan URL resmi dari SPEEDHOME Malaysia atau pilih salah satu area rekomendasi populer di atas, lalu klik tombol jalankan untuk memproses analisis intelijen pasar properti secara otomatis.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+            # Jika area kosong atau bernilai nan
