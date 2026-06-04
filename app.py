@@ -52,30 +52,55 @@ st.markdown("""
         box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
     }
 
-   /* =========================================================================
+    /* =========================================================================
        ⚡ MODIFIKASI RESPONSIVITAS OTOMATIS (KHUSUS LAYAR HP SEPERTI SMARTPHONE)
        ========================================================================= */
     @media (max-width: 768px) {
-        /* FIX: Mengatasi tanggal terpotong di HP (Samping maupun Atas) */
-        .realtime-clock-container {
-            justify-content: center !important;
-            padding-top: 12px !important;    /* SOLUSI: Memberi ruang di atas teks agar tidak terpotong header */
-            padding-bottom: 8px !important;
-            padding-right: 15px !important;
-            padding-left: 15px !important;
-            font-size: 0.85rem !important;
-            line-height: 1.5 !important;     /* SOLUSI: Mengatur tinggi baris teks agar proporsional */
-            width: 100% !important;
-            box-sizing: border-box !important;
-            margin-top: 10px !important;     /* SOLUSI: Menurunkan posisi container dari batas atas aplikasi */
-        }
-
-        /* Mengurangi padding samping aplikasi agar teks tidak tertekan ke dalam */
         .block-container {
             padding-left: 0.5rem !important;
             padding-right: 0.5rem !important;
-            padding-top: 0.5rem !important; /* Disesuaikan agar seimbang dengan jam */
+            padding-top: 1rem !important;
         }
+        .hero-header {
+            min-height: 140px !important;
+            padding: 20px 15px !important;
+            margin-bottom: 15px !important;
+        }
+        .hero-header h1 {
+            font-size: 1.4rem !important;
+            line-height: 1.2 !important;
+        }
+        .hero-header p {
+            font-size: 0.85rem !important;
+        }
+        button[data-baseweb="tab"] {
+            font-size: 0.85rem !important;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 1.15rem !important;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 0.8rem !important;
+        }
+        div[data-testid="stDataFrame"], .js-plotly-plot {
+            overflow-x: auto !important;
+            width: 100% !important;
+        }
+        .premium-card {
+            padding: 12px !important;
+        }
+        .footer-background-container h2 {
+            font-size: 1.3rem !important;
+        }
+        .footer-background-container p {
+            font-size: 0.85rem !important;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # ==========================================
 # AUTOMATED DATA SIMULATOR ENGINE 
 # ==========================================
