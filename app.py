@@ -390,7 +390,7 @@ if 'data_master' in st.session_state:
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
 # =========================================================================
-    # TAB 2: TABEL DAFTAR UNIT (LINK ASLI TANPA DIUBAH KE ADS)
+    # TAB 2: TABEL DAFTAR UNIT (SMART ROUTING UNTUK ID YANG REJECT/EXPIRED)
     # =========================================================================
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -415,18 +415,29 @@ if 'data_master' in st.session_state:
 
         df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
         
-        # 4. 🛠️ BERSIHKAN URL TANPA MENGUBAH PATH (REELS TETAP REELS)
-        def bersihkan_url_asli(url):
-            url_str = str(url).strip()
+        # 4. 🛠️ ALGORITMA PENYELAMAT: JIKA ID EXPIRED, ALIHKAN KE PENCARIAN AREA
+        def proteksi_dan_rute_url(row):
+            url_str = str(row["Link Listing"]).strip()
+            area_str = str(row["Nama Property / Area"]).strip().lower().replace(" ", "-")
+            
             if not url_str or url_str.lower() == 'nan':
                 return "https://speedhome.com"
-            # Jika tidak ada https:// di depannya, baru kita tambahkan domain utamanya saja
-            if not (url_str.startswith("http://") or url_str.startswith("https://")):
-                return f"https://speedhome.com/{url_str.lstrip('/')}"
-            return url_str
+            
+            # Jika link berisi '/rent/details/' yang terbukti mati/kosong saat dicari
+            if "/rent/details/" in url_str:
+                # Alihkan langsung ke halaman pencarian area aktifnya agar user bisa verifikasi area
+                if area_str and area_str != 'nan':
+                    return f"https://speedhome.com/rent/{area_str}"
+                return "https://speedhome.com/rent/kuala-lumpur" # Fallback default
+            
+            # Jika link sudah berupa format valid lainnya (seperti reels utuh)
+            if url_str.startswith("http://") or url_str.startswith("https://"):
+                return url_str
+                
+            return f"https://speedhome.com/{url_str.lstrip('/')}"
 
-        # Terapkan pembersihan karakter saja
-        df_terfilter["Link Listing"] = df_terfilter["Link Listing"].apply(bersihkan_url_asli)
+        # Terapkan fungsi pengecekan berbasis baris (axis=1)
+        df_terfilter["Link Listing"] = df_terfilter.apply(proteksi_and_rute_url, axis=1)
         
         # 5. Sinkronisasi Nama Kolom Agar Sesuai dengan Tampilan Gambar Tabel
         df_terfilter = df_terfilter.rename(columns={"Link Listing": "Tautan Verifikasi SPEEDHOME"})
@@ -442,7 +453,7 @@ if 'data_master' in st.session_state:
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
-                # Menggunakan LinkColumn murni untuk membuka tautan asli Anda (reels)
+                # Membuka Link hasil rute aman tanpa resiko halaman kosong 'No Properties Found'
                 "Tautan Verifikasi SPEEDHOME": st.column_config.LinkColumn(
                     "Tautan Verifikasi SPEEDHOME"
                 ),
