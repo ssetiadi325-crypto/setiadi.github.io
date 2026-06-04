@@ -389,8 +389,8 @@ if 'data_master' in st.session_state:
             
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
- # =========================================================================
-    # TAB 2: TABEL DAFTAR UNIT (SINKRONISASI & PERBAIKAN LINK OTOMATIS)
+# =========================================================================
+    # TAB 2: TABEL DAFTAR UNIT (LINK ASLI TANPA DIUBAH KE ADS)
     # =========================================================================
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -415,25 +415,20 @@ if 'data_master' in st.session_state:
 
         df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
         
-        # 4. 🛠️ FUNGSI PERBAIKAN LINK OTOMATIS (Mencegah Halaman Error / 404)
-        def perbaiki_url_speedhome(url):
+        # 4. 🛠️ BERSIHKAN URL TANPA MENGUBAH PATH (REELS TETAP REELS)
+        def bersihkan_url_asli(url):
             url_str = str(url).strip()
-            # Jika kolom kosong atau nan
             if not url_str or url_str.lower() == 'nan':
                 return "https://speedhome.com"
-            # Jika link sudah lengkap (dimulai dengan http atau https)
-            if url_str.startswith("http://") or url_str.startswith("https://"):
-                return url_str
-            # Jika link hanya tertulis sebagian (misal: "reels/flexus...")
-            if url_str.startswith("reels/") or url_str.startswith("ads/"):
-                return f"https://speedhome.com/{url_str}"
-            # Pengaman tambahan untuk teks mentah lainnya
-            return f"https://speedhome.com/{url_str.lstrip('/')}"
+            # Jika tidak ada https:// di depannya, baru kita tambahkan domain utamanya saja
+            if not (url_str.startswith("http://") or url_str.startswith("https://")):
+                return f"https://speedhome.com/{url_str.lstrip('/')}"
+            return url_str
 
-        # Terapkan perbaikan ke kolom data
-        df_terfilter["Link Listing"] = df_terfilter["Link Listing"].apply(perbaiki_url_speedhome)
+        # Terapkan pembersihan karakter saja
+        df_terfilter["Link Listing"] = df_terfilter["Link Listing"].apply(bersihkan_url_asli)
         
-        # 5. Sinkronisasi Nama Kolom Link Agar Sesuai dengan Gambar Interface
+        # 5. Sinkronisasi Nama Kolom Agar Sesuai dengan Tampilan Gambar Tabel
         df_terfilter = df_terfilter.rename(columns={"Link Listing": "Tautan Verifikasi SPEEDHOME"})
         
         # 6. Susunan Kolom yang Ditampilkan di Tabel
@@ -447,7 +442,7 @@ if 'data_master' in st.session_state:
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
-                # Menggunakan LinkColumn murni untuk membuka URL hasil perbaikan sistem
+                # Menggunakan LinkColumn murni untuk membuka tautan asli Anda (reels)
                 "Tautan Verifikasi SPEEDHOME": st.column_config.LinkColumn(
                     "Tautan Verifikasi SPEEDHOME"
                 ),
@@ -465,7 +460,7 @@ if 'data_master' in st.session_state:
         # 8. Catatan Keterangan Bawah Tabel
         st.caption("ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** merupakan hasil konversi formulasi internal.")
         
-        # 9. Render Tombol Export (Aman dari NameError)
+        # 9. Render Tombol Export
         try:
             render_export_buttons("tab2")
         except NameError:
