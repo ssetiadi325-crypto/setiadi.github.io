@@ -299,6 +299,66 @@ if 'data_master' in st.session_state:
     df_data = st.session_state['data_master']
     wilayah_aktif = st.session_state['wilayah_aktif']
     
+    # ------------------------------------------
+    # FUNGSI UTILITAS: EKSPOR DATA (Agar tidak menulis kode berulang)
+    # ------------------------------------------
+    def render_export_buttons(df_master, nama_wilayah):
+        st.write("---")
+        st.markdown("#### 📥 Ekspor Laporan Intelijen Pasar")
+        
+        tgl_skrg = datetime.datetime.now().strftime("%Y%m%d")
+        nama_file_dasar = f"SPEEDHOME_{nama_wilayah.replace(' ', '_')}_{tgl_skrg}"
+        
+        # 1. Siapkan Buffer Excel (Summary + Raw)
+        summary_rows = []
+        for tipe, grup in df_master.groupby("Tipe Kamar"):
+            grup_harga = grup["Harga Bulanan (RM)"]
+            grup_ukuran = grup["Ukuran Unit (sqft)"]
+            modus_series = grup_harga.mode()
+            nilai_modus = modus_series.iloc[0] if not modus_series.empty else grup_harga.median()
+            estimasi_fair = (grup_harga.median() * 0.65) + (grup_harga.mean() * 0.35)
+            
+            summary_rows.append({
+                "Tipe Unit": tipe,
+                "Jumlah Unit": len(grup),
+                "Rata-rata Harga (RM)": round(grup_harga.mean(), 1),
+                "Median Harga (RM)": int(grup_harga.median()),
+                "Modus Harga (RM)": int(nilai_modus),
+                "Harga Wajar / Fair Price (RM)": int(estimasi_fair),
+                "Rata-rata Ukuran (sqft)": round(grup_ukuran.mean(), 1)
+            })
+        df_summary_table = pd.DataFrame(summary_rows).set_index("Tipe Unit")
+
+        buffer_excel = BytesIO()
+        with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
+            df_summary_table.to_excel(writer, sheet_name='Summary_Report')
+            df_master.to_excel(writer, index=False, sheet_name='All_Listings')
+        data_excel_siap = buffer_excel.getvalue()
+        
+        # 2. Render Tombol Berdampingan
+        col_dl1, col_dl2 = st.columns(2)
+        with col_dl1:
+            st.download_button(
+                label="📥 Download Laporan Manajemen Lengkap (.xlsx)",
+                data=data_excel_siap,
+                file_name=f"{nama_file_dasar}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                key=f"xlsx_{st.get_option('theme.primaryColor')}_{np.random.randint(0, 1000000)}" # Key unik dinamis agar tidak bentrok antar tab
+            )
+        with col_dl2:
+            st.download_button(
+                label="📄 Download Raw Data Sheet (.csv)",
+                data=df_master.to_csv(index=False).encode('utf-8'),
+                file_name=f"{nama_file_dasar}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key=f"csv_{st.get_option('theme.primaryColor')}_{np.random.randint(0, 1000000)}"
+            )
+
+    # ------------------------------------------
+    # INISIALISASI TAB LAYOUT
+    # ------------------------------------------
     tab_summary, tab_listings, tab_innovation = st.tabs([
         "📈 1. Tabel Ringkasan Harga", 
         "📋 2. Tabel Daftar Unit", 
@@ -306,7 +366,7 @@ if 'data_master' in st.session_state:
     ])
     
     # ------------------------------------------
-    # TAB 1: TABEL RINGKASAN HARGA (SUSUNAN ASLI UTUH)
+    # TAB 1: TABEL RINGKASAN HARGA
     # ------------------------------------------
     with tab_summary:
         st.markdown(f"### 📊 Resume Ringkasan Data Pasar Wilayah: **{wilayah_aktif}**")
@@ -315,7 +375,6 @@ if 'data_master' in st.session_state:
         for tipe, grup in df_data.groupby("Tipe Kamar"):
             grup_harga = grup["Harga Bulanan (RM)"]
             grup_ukuran = grup["Ukuran Unit (sqft)"]
-            
             modus_series = grup_harga.mode()
             nilai_modus = modus_series.iloc[0] if not modus_series.empty else grup_harga.median()
             estimasi_fair = (grup_harga.median() * 0.65) + (grup_harga.mean() * 0.35)
@@ -349,37 +408,11 @@ if 'data_master' in st.session_state:
         with col_s3:
             st.success(f"🟢 **Sewa Tahunan:** Tersedia ({len(df_data)} Unit Siap Kontrak)")
             
-        st.write("---")
-        st.markdown("#### 📥 Ekspor Laporan Intelijen Pasar")
-        tgl_skrg = datetime.datetime.now().strftime("%Y%m%d")
-        nama_file_dasar = f"SPEEDHOME_{wilayah_aktif.replace(' ', '_')}_{tgl_skrg}"
-        
-        buffer_excel = BytesIO()
-        with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
-            df_summary_table.to_excel(writer, sheet_name='Summary_Report')
-            df_data.to_excel(writer, index=False, sheet_name='All_Listings')
-        data_excel_siap = buffer_excel.getvalue()
-        
-        col_dl1, col_dl2 = st.columns(2)
-        with col_dl1:
-            st.download_button(
-                label="📥 Download Laporan Manajemen Lengkap (.xlsx)",
-                data=data_excel_siap,
-                file_name=f"{nama_file_dasar}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
-            )
-        with col_dl2:
-            st.download_button(
-                label="📄 Download Raw Data Sheet (.csv)",
-                data=df_data.to_csv(index=False).encode('utf-8'),
-                file_name=f"{nama_file_dasar}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
+        # Panggil Fitur Download di Tab 1
+        render_export_buttons(df_data, wilayah_aktif)
 
     # ------------------------------------------
-    # TAB 2: TABEL DAFTAR UNIT (SUSUNAN ASLI UTUH)
+    # TAB 2: TABEL DAFTAR UNIT
     # ------------------------------------------
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
@@ -424,13 +457,14 @@ if 'data_master' in st.session_state:
         
         st.caption(
             "ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** pada kolom Harga Harian "
-            "bukan merupakan tarif sewa harian murni dari pemilik properti. Platform SPEEDHOME pada dasarnya merupakan "
-            "platform *managed-rental* yang **berfokus mendominasi pasar sewa bulanan dan tahunan**. Angka harian tersebut "
-            "dihasiilkan melalui kalkulator konversi internal berbasis algoritma komposit untuk keperluan analisis komparatif makro."
+            "bukan merupakan tarif sewa harian murni dari pemilik properti."
         )
+        
+        # Panggil Fitur Download di Tab 2
+        render_export_buttons(df_data, wilayah_aktif)
 
     # ------------------------------------------
-    # TAB 3: INOVASI & VISUALISASI DATA (SUSUNAN ASLI UTUH)
+    # TAB 3: INOVASI & VISUALISASI DATA
     # ------------------------------------------
     with tab_innovation:
         st.markdown("### 💡 CEO Data-Driven Strategic Insights")
@@ -478,9 +512,10 @@ if 'data_master' in st.session_state:
                 value=f"{persentase_roi:.2f} % / Tahun",
                 delta="Sangat Menjanjikan (> 5.5%)" if persentase_roi >= 5.5 else "Yield Standard/Rendah (< 5.5%)"
             )
-            st.caption(f"Estimasi ini dihitung secara cerdas berbasis nilai median pasar aktif saat ini, yaitu sebesar **RM {harga_sewa_median}/bulan**.")
         st.markdown("</div>", unsafe_allow_html=True)
-
+        
+        # Panggil Fitur Download di Tab 3
+        render_export_buttons(df_data, wilayah_aktif)
 # ==========================================
 # FOOTER APPLICATION LAYOUT (IMAGE BACKGROUND FOR TEXT)
 # ==========================================
