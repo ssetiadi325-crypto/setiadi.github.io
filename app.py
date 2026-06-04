@@ -389,20 +389,23 @@ if 'data_master' in st.session_state:
             
         render_export_buttons(df_data, df_summary_table, wilayah_aktif, "tab1")
 
-  # ------------------------------------------
-    # TAB 2: TABEL DAFTAR UNIT
-    # ------------------------------------------
+ # =========================================================================
+    # TAB 2: TABEL DAFTAR UNIT (FULL UTUH & VALID)
+    # =========================================================================
     with tab_listings:
         st.markdown("### 📋 Seluruh Daftar Unit Properti Berhasil Dikumpulkan")
         
+        # 1. Komponen Filter Multi-select Furnitur
         opsi_furnitur = st.multiselect(
             "Filter Berdasarkan Kelengkapan Furnitur:",
             options=list(df_data["Status Furnitur"].unique()),
             default=list(df_data["Status Furnitur"].unique())
         )
         
+        # 2. Proses Filtering Data
         df_terfilter = df_data[df_data["Status Furnitur"].isin(opsi_furnitur)].copy()
         
+        # 3. Fungsi Formating Tampilan Harga Harian
         def format_harga_harian(row):
             harga_bulanan = row["Harga Bulanan (RM)"]
             harga_harian = row["Harga Harian (RM)"]
@@ -412,22 +415,23 @@ if 'data_master' in st.session_state:
 
         df_terfilter["Harga Harian Tampilan"] = df_terfilter.apply(format_harga_harian, axis=1)
         
-        # Menyelaraskan nama kolom agar sesuai dengan konfigurasi tampilan
+        # 4. Sinkronisasi Nama Kolom Link Agar Sesuai dengan Gambar Interface
         df_terfilter = df_terfilter.rename(columns={"Link Listing": "Tautan Verifikasi SPEEDHOME"})
         
+        # 5. Susunan Kolom yang Ditampilkan di Tabel
         kolom_spek = [
             "Judul Listing", "Nama Property / Area", "Tipe Kamar", 
             "Harga Harian Tampilan", "Harga Bulanan (RM)", "Harga Tahunan (RM)", 
             "Ukuran Unit (sqft)", "Status Furnitur", "Tautan Verifikasi SPEEDHOME"
         ]
         
-        # Render Tabel Utama dengan Struktur Kurung yang Sudah Sempurna
+        # 6. Render Komponen Dataframe Utama Streamlit
         st.dataframe(
             df_terfilter[kolom_spek],
             column_config={
+                # LinkColumn tanpa 'display_text' agar mengarah ke URL /reels/ asli secara utuh
                 "Tautan Verifikasi SPEEDHOME": st.column_config.LinkColumn(
-                    "Tautan Verifikasi SPEEDHOME",
-                    display_text="Buka Link 🌐"
+                    "Tautan Verifikasi SPEEDHOME"
                 ),
                 "Harga Harian Tampilan": st.column_config.TextColumn(
                     "Harga Harian (RM)", 
@@ -440,9 +444,10 @@ if 'data_master' in st.session_state:
             hide_index=True
         )
         
+        # 7. Catatan Keterangan Bawah Tabel
         st.caption("ℹ️ **Catatan Strategis Eksekutif:** Angka dengan tanda penanda **(Estimasi)** merupakan hasil konversi formulasi internal.")
         
-        # Pastikan fungsi ini ada di script Anda, jika eror di sini jalankan tanpa fungsi ini
+        # 8. Render Tombol Export (Aman dari NameError)
         try:
             render_export_buttons("tab2")
         except NameError:
